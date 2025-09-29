@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  participants Participant[]
+  sales        Sale[]
+  gameRules    GameRule[]
+  competitions Competition[]
+  achievements Achievement[]
+
+  @@map("admins")
+}
+
+model Participant {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  position  String
+  points    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  adminId   String
+
+  // Relacionamentos
+  admin        Admin         @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  sales        Sale[]
+  achievements Achievement[]
+
+  @@unique([email, adminId])
+  @@map("participants")
+}
+
+model Sale {
+  id            String   @id @default(cuid())
+  participantId String
+  productName   String
+  points        Int
+  value         Float?   @default(0)
+  date          DateTime @default(now())
+  type          String   @default("sale") // "sale" | "rental"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  adminId       String
+
+  // Relacionamentos
+  participant Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  admin       Admin       @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@map("sales")
+}
+
+model GameRule {
+  id          String   @id @default(cuid())
+  productName String
+  points      Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  adminId     String
+
+  // Relacionamentos
+  admin Admin @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@unique([productName, adminId])
+  @@map("game_rules")
+}
+
+model Competition {
+  id           String   @id @default(cuid())
+  name         String
+  type         String   // "tower" | "race" | "treasure" | "medals" | "missions"
+  startDate    DateTime
+  endDate      DateTime
+  isActive     Boolean  @default(true)
+  rules        Json?    // Armazena regras específicas da competição
+  participants Json?    // Array de IDs dos participantes
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  adminId      String
+
+  // Relacionamentos
+  admin        Admin         @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  achievements Achievement[]
+
+  @@map("competitions")
+}
+
+model Achievement {
+  id            String   @id @default(cuid())
+  participantId String
+  competitionId String?
+  type          String   // "gold" | "silver" | "bronze" | "treasure" | "mission"
+  description   String
+  points        Int
+  date          DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  adminId       String
+
+  // Relacionamentos
+  participant Participant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  competition Competition? @relation(fields: [competitionId], references: [id], onDelete: SetNull)
+  admin       Admin        @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@map("achievements")
+}
