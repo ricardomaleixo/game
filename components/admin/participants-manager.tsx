@@ -63,7 +63,7 @@ export function ParticipantsManager() {
       if (!authState.isAuthenticated) {
         console.log("admin is not authenticatedooooo")
       }
-      const newParticipant = await saveParticipant(formData, authState)
+      const newParticipant = await saveParticipant(formData)
       console.log("newParticipant", newParticipant)
 
       const newUser = authService.register(formData.name, formData.email, "participant")

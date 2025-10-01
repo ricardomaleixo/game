@@ -1,4 +1,14 @@
-import { loginUser, getCurrentUser, logoutUser, registerAdmin, changePassword, getAuthState } from "@/app/actions/auth-actions"
+import { 
+  loginUser, 
+  getCurrentUser, 
+  logoutUser, 
+  registerAdmin, 
+  registerParticipant, 
+  changePassword, 
+  getAuthState,
+  setParticipantPassword,
+  participantNeedsPasswordSetup
+} from "@/app/actions/auth-actions"
 import type { AuthUser } from "@/app/actions/auth-actions"
 
 // Tipo de compatibilidade
@@ -41,7 +51,7 @@ class AuthService {
           email: result.user.email,
           role: result.user.role,
           createdAt: result.user.createdAt,
-          needsPasswordSetup: result.user.needsPasswordSetup
+          ...(result.user.hasOwnProperty("needsPasswordSetup") && { needsPasswordSetup: (result.user as any).needsPasswordSetup })
         }
 
         // Salvar no localStorage para compatibilidade com código cliente existente
@@ -92,9 +102,20 @@ class AuthService {
           throw new Error(result.error || "Erro ao registrar admin")
         }
       } else {
-        // Para participantes, precisamos implementar na server action
-        // Por enquanto, vamos manter a lógica atual
-        throw new Error("Registro de participantes deve ser feito através de outras funções")
+        // Para participantes, usar server action
+        const result = await registerParticipant(name, email, "Vendedor") // Posição padrão
+        if (result.success && result.user) {
+          return {
+            id: result.user.id,
+            name: result.user.name,
+            email: result.user.email,
+            role: result.user.role,
+            createdAt: result.user.createdAt,
+            needsPasswordSetup: result.user.needsPasswordSetup
+          }
+        } else {
+          throw new Error(result.error || "Erro ao registrar participante")
+        }
       }
     } catch (error) {
       console.error("Erro no registro:", error)
@@ -110,18 +131,6 @@ class AuthService {
       return false
     } catch (error) {
       console.error("Erro ao definir senha:", error)
-      return false
-    }
-  }
-
-  async needsPasswordSetup(email: string): Promise<boolean> {
-    try {
-      // Esta função deveria usar uma server action também
-      // Por agora, implementação simplificada
-      console.warn("needsPasswordSetup deveria ser implementado via server action")
-      return false
-    } catch (error) {
-      console.error("Erro ao verificar necessidade de senha:", error)
       return false
     }
   }
@@ -144,6 +153,26 @@ class AuthService {
       console.warn("syncParticipantsAsUsers deveria ser implementado via server action")
     } catch (error) {
       console.error("Erro ao sincronizar participantes:", error)
+    }
+  }
+
+  // Configurar senha de participante
+  async setParticipantPassword(participantId: string, password: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      return await setParticipantPassword(participantId, password)
+    } catch (error) {
+      console.error("Erro ao definir senha do participante:", error)
+      return { success: false, error: "Erro interno do servidor" }
+    }
+  }
+
+  // Verificar se participante precisa configurar senha
+  async needsPasswordSetup(email: string): Promise<boolean> {
+    try {
+      return await participantNeedsPasswordSetup(email)
+    } catch (error) {
+      console.error("Erro ao verificar necessidade de senha:", error)
+      return false
     }
   }
 

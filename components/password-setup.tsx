@@ -2,7 +2,8 @@
 
 import type React from "react"
 import { useState } from "react"
-import { authService } from "@/lib/auth"
+import { setParticipantPassword } from "@/app/actions/auth-actions"
+import { useAuth } from "@/hooks/use-auth-prisma"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,6 +19,7 @@ export function PasswordSetup({ user, onPasswordSet }: PasswordSetupProps) {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,15 +39,24 @@ export function PasswordSetup({ user, onPasswordSet }: PasswordSetupProps) {
       return
     }
 
-    // Definir senha
-    const success = authService.setPassword(user.id, password)
+    try {
+      // Definir senha
+      const result = await setParticipantPassword(user.email, password)
 
-    if (await success) {
-      // Fazer login automático com a nova senha
-      authService.login(user.email, password)
-      onPasswordSet()
-    } else {
-      setError("Erro ao definir senha. Tente novamente.")
+      if (result.success) {
+        // Fazer login automático com a nova senha
+        const loginSuccess = await login(user.email, password)
+        if (loginSuccess) {
+          onPasswordSet()
+        } else {
+          setError("Senha configurada, mas erro no login automático. Tente fazer login novamente.")
+        }
+      } else {
+        setError(result.message || "Erro ao definir senha. Tente novamente.")
+      }
+    } catch (error) {
+      console.error("Erro ao configurar senha:", error)
+      setError("Erro interno. Tente novamente.")
     }
 
     setIsLoading(false)

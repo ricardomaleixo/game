@@ -4,7 +4,7 @@ import { useState, useEffect, createContext, useContext, type ReactNode } from "
 import { getCurrentUser, loginUser, logoutUser, type AuthUser, type AuthState } from "@/app/actions/auth-actions"
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; needsPasswordSetup?: boolean; participantId?: string }>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
 }
@@ -31,14 +31,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshUser()
   }, [])
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string; needsPasswordSetup?: boolean; participantId?: string }> => {
     try {
       const result = await loginUser(email, password)
       if (result.success && result.user) {
         setAuthState({ user: result.user, isAuthenticated: true })
         return { success: true }
+      } else if (result.needsPasswordSetup) {
+        return { 
+          success: false, 
+          needsPasswordSetup: true, 
+          participantId: result.participantId,
+          error: result.message 
+        }
       } else {
-        return { success: false, error: result.error || "Erro no login" }
+        return { success: false, error: result.message || "Erro no login" }
       }
     } catch (error) {
       console.error("Erro no login:", error)

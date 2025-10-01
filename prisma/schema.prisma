@@ -34,6 +34,7 @@ model Participant {
   email     String
   position  String
   points    Int      @default(0)
+  password  String?  // Campo opcional para senha do participante
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   adminId   String
