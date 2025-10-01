@@ -1,4 +1,4 @@
-import { localDb } from "./database-local"
+import { prismaDb } from "./database-prisma"
 
 // Exportar interfaces para compatibilidade
 export interface Participant {
@@ -55,118 +55,120 @@ export interface Achievement {
 class DatabaseWrapper {
   // Participants
   getParticipants(): Promise<Participant[]> {
-    return localDb.getParticipants()
+    return prismaDb.getParticipants()
   }
 
-  saveParticipant(participant: Omit<Participant, "id" | "createdAt" | "adminId">): Promise<Participant> {
-    return localDb.saveParticipant(participant)
+  saveParticipant(participant: Omit<Participant, "id" | "createdAt">): Promise<Participant> {
+    return prismaDb.saveParticipant(participant)
   }
 
   updateParticipant(id: string, updates: Partial<Participant>): Promise<void> {
-    return localDb.updateParticipant(id, updates)
+    return prismaDb.updateParticipant(id, updates)
   }
 
   deleteParticipant(id: string): Promise<void> {
-    return localDb.deleteParticipant(id)
+    return prismaDb.deleteParticipant(id)
   }
 
   // Sales
   getSales(): Promise<Sale[]> {
-    return localDb.getSales()
+    return prismaDb.getSales()
   }
 
   saveSale(sale: Omit<Sale, "id" | "adminId">): Promise<Sale> {
-    return localDb.saveSale(sale)
+    return prismaDb.saveSale(sale)
   }
 
   updateSale(id: string, updates: Partial<Omit<Sale, "id">>): Promise<void> {
-    return localDb.updateSale(id, updates)
+    return prismaDb.updateSale(id, updates)
   }
 
   deleteSale(id: string): Promise<void> {
-    return localDb.deleteSale(id)
+    return prismaDb.deleteSale(id)
   }
 
   // Game Rules
   getGameRules(): Promise<GameRule[]> {
-    return localDb.getGameRules()
+    return prismaDb.getGameRules()
   }
 
   saveGameRule(rule: Omit<GameRule, "id" | "adminId">): Promise<GameRule> {
-    return localDb.saveGameRule(rule)
+    return prismaDb.saveGameRule(rule)
   }
 
   updateGameRule(id: string, updates: Partial<Omit<GameRule, "id">>): Promise<void> {
-    return localDb.updateGameRule(id, updates)
+    return prismaDb.updateGameRule(id, updates)
   }
 
   deleteGameRule(id: string): Promise<void> {
-    return localDb.deleteGameRule(id)
+    return prismaDb.deleteGameRule(id)
   }
 
   // Competitions
   getCompetitions(): Promise<Competition[]> {
-    return localDb.getCompetitions()
+    return prismaDb.getCompetitions()
   }
 
   saveCompetition(competition: Omit<Competition, "id" | "adminId">): Promise<Competition> {
-    return localDb.saveCompetition(competition)
+    return prismaDb.saveCompetition(competition)
   }
 
   updateCompetition(id: string, updates: Partial<Omit<Competition, "id">>): Promise<void> {
-    return localDb.updateCompetition(id, updates)
+    return prismaDb.updateCompetition(id, updates)
   }
 
   deleteCompetition(id: string): Promise<void> {
-    return localDb.deleteCompetition(id)
+    return prismaDb.deleteCompetition(id)
   }
 
   // Achievements
   getAchievements(): Promise<Achievement[]> {
-    return localDb.getAchievements()
+    return prismaDb.getAchievements()
   }
 
   saveAchievement(achievement: Omit<Achievement, "id" | "adminId">): Promise<Achievement> {
-    return localDb.saveAchievement(achievement)
+    return prismaDb.saveAchievement(achievement)
   }
 
-  // Teams
-  getTeams(): Promise<any[]> {
-    return localDb.getTeams()
+  // Teams (implementação temporária para compatibilidade)
+  async getTeams(): Promise<any[]> {
+    // TODO: Implementar teams no Prisma se necessário
+    return []
   }
 
-  saveTeam(team: any): Promise<any> {
-    return localDb.saveTeam(team)
+  async saveTeam(team: any): Promise<any> {
+    // TODO: Implementar teams no Prisma se necessário
+    return team
   }
 
-  updateTeam(id: string, updates: any): Promise<void> {
-    return localDb.updateTeam(id, updates)
+  async updateTeam(id: string, updates: any): Promise<void> {
+    // TODO: Implementar teams no Prisma se necessário
   }
 
-  deleteTeam(id: string): Promise<void> {
-    return localDb.deleteTeam(id)
+  async deleteTeam(id: string): Promise<void> {
+    // TODO: Implementar teams no Prisma se necessário
   }
 
   // Utility methods
   getRanking(): Promise<Participant[]> {
-    return localDb.getRanking()
+    return prismaDb.getRanking()
   }
 
   resetCompetition(): Promise<void> {
-    return localDb.resetCompetition()
+    return prismaDb.resetCompetition()
   }
 
   fixNegativePoints(): Promise<void> {
-    return localDb.fixNegativePoints()
+    return prismaDb.fixNegativePoints()
   }
 
   clearAllUserData(): Promise<void> {
-    return localDb.clearAllUserData()
+    return prismaDb.clearAllUserData()
   }
 
-  // Métodos de compatibilidade (não fazem nada no localStorage)
+  // Métodos de compatibilidade
   migrateDataToMultiTenant(): void {
-    // Não necessário com localStorage
+    // Método de compatibilidade - não necessário com Prisma
   }
 }
 

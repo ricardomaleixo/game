@@ -1,11 +1,8 @@
-export interface User {
-  id: string
-  name: string
-  email: string
-  role: "admin" | "participant"
-  createdAt: string
-  needsPasswordSetup?: boolean
-}
+import { loginUser, getCurrentUser, logoutUser, registerAdmin, changePassword, getAuthState } from "@/app/actions/auth-actions"
+import type { AuthUser } from "@/app/actions/auth-actions"
+
+// Tipo de compatibilidade
+export type User = AuthUser
 
 export interface AuthState {
   user: User | null
@@ -33,127 +30,133 @@ class AuthService {
     }
   }
 
-  login(email: string, password: string): User | null {
-    const users = this.getUsers()
-    const passwords = this.getPasswords()
-    const user = users.find((u) => u.email === email)
+  async login(email: string, password: string): Promise<User | null> {
+    try {
+      const result = await loginUser(email, password)
+      if (result.success && result.user) {
+        // Converter AuthUser para User (compatibilidade)
+        const user: User = {
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email,
+          role: result.user.role,
+          createdAt: result.user.createdAt,
+          needsPasswordSetup: result.user.needsPasswordSetup
+        }
 
-    if (user) {
-      const userPassword = passwords[user.id]
-
-      // Se não tem senha definida, aceita qualquer senha e redireciona para definir
-      if (!userPassword) {
-        return { ...user, needsPasswordSetup: true } as User & { needsPasswordSetup: boolean }
-      }
-
-      // Verifica senha definida pelo usuário
-      if (userPassword === password) {
-        localStorage.setItem(this.storageKey, JSON.stringify(user))
+        // Salvar no localStorage para compatibilidade com código cliente existente
+        if (typeof window !== "undefined") {
+          localStorage.setItem(this.storageKey, JSON.stringify(user))
+        }
+        
         return user
       }
+      return null
+    } catch (error) {
+      console.error("Erro no login:", error)
+      return null
     }
-
-    return null
   }
 
-  logout(): void {
-    localStorage.removeItem(this.storageKey)
-  }
-
-  register(name: string, email: string, role: "admin" | "participant"): User {
-    const users = this.getUsers()
-    const newUser: User = {
-      id: Date.now().toString(),
-      name,
-      email,
-      role,
-      createdAt: new Date().toISOString(),
-    }
-
-    users.push(newUser)
-    localStorage.setItem("gamified-sales-users", JSON.stringify(users))
-
-    return newUser
-  }
-
-  setPassword(userId: string, password: string): boolean {
-    const passwords = this.getPasswords()
-    passwords[userId] = password
-    localStorage.setItem("gamified-sales-passwords", JSON.stringify(passwords))
-    return true
-  }
-
-  needsPasswordSetup(email: string): boolean {
-    const users = this.getUsers()
-    const passwords = this.getPasswords()
-    const user = users.find((u) => u.email === email)
-
-    if (user) {
-      return !passwords[user.id]
-    }
-
-    return false
-  }
-
-  findUserByEmail(email: string): User | null {
-    const users = this.getUsers()
-    return users.find((u) => u.email === email) || null
-  }
-
-  syncParticipantsAsUsers(): void {
-    if (typeof window === "undefined") return
-
-    const currentUser = this.getAuthState().user
-    if (!currentUser || currentUser.role !== "admin") return
-
-    const allParticipants = JSON.parse(localStorage.getItem("gamified-sales-participants") || "[]")
-    // Filtrar apenas participantes do admin logado
-    const participants = allParticipants.filter((p: any) => p.adminId === currentUser.id)
-    const existingUsers = this.getUsers()
-
-    participants.forEach((participant: any) => {
-      // Verificar se já existe usuário para este participante
-      const userExists = existingUsers.find((u) => u.email === participant.email)
-
-      if (!userExists) {
-        // Criar usuário para o participante
-        this.register(participant.name, participant.email, "participant")
+  async logout(): Promise<void> {
+    try {
+      // Usar server action para logout
+      await logoutUser()
+      
+      // Também limpar localStorage para compatibilidade
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(this.storageKey)
       }
-    })
+    } catch (error) {
+      console.error("Erro no logout:", error)
+      // Mesmo com erro, limpar localStorage
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(this.storageKey)
+      }
+    }
   }
 
-  private getUsers(): User[] {
-    if (typeof window === "undefined") return []
-
-    const stored = localStorage.getItem("gamified-sales-users")
-    if (!stored) {
-      // Criar usuário admin padrão
-      const defaultAdmin: User = {
-        id: "1",
-        name: "Administrador",
-        email: "admin@empresa.com",
-        role: "admin",
-        createdAt: new Date().toISOString(),
+  async register(name: string, email: string, role: "admin" | "participant"): Promise<User> {
+    try {
+      if (role === "admin") {
+        const result = await registerAdmin(name, email, "admin123") // Senha padrão
+        if (result.success && result.user) {
+          return {
+            id: result.user.id,
+            name: result.user.name,
+            email: result.user.email,
+            role: result.user.role,
+            createdAt: result.user.createdAt
+          }
+        } else {
+          throw new Error(result.error || "Erro ao registrar admin")
+        }
+      } else {
+        // Para participantes, precisamos implementar na server action
+        // Por enquanto, vamos manter a lógica atual
+        throw new Error("Registro de participantes deve ser feito através de outras funções")
       }
-      localStorage.setItem("gamified-sales-users", JSON.stringify([defaultAdmin]))
-      return [defaultAdmin]
+    } catch (error) {
+      console.error("Erro no registro:", error)
+      throw error
     }
+  }
 
-    return JSON.parse(stored)
+  async setPassword(userId: string, password: string): Promise<boolean> {
+    try {
+      // Esta função deveria usar uma server action também
+      // Por agora, retornar false indicando que não está implementada
+      console.warn("setPassword deveria ser implementado via server action")
+      return false
+    } catch (error) {
+      console.error("Erro ao definir senha:", error)
+      return false
+    }
+  }
+
+  async needsPasswordSetup(email: string): Promise<boolean> {
+    try {
+      // Esta função deveria usar uma server action também
+      // Por agora, implementação simplificada
+      console.warn("needsPasswordSetup deveria ser implementado via server action")
+      return false
+    } catch (error) {
+      console.error("Erro ao verificar necessidade de senha:", error)
+      return false
+    }
+  }
+
+  async findUserByEmail(email: string): Promise<User | null> {
+    try {
+      // Esta função deveria usar uma server action também
+      // Por agora, implementação simplificada
+      console.warn("findUserByEmail deveria ser implementado via server action")
+      return null
+    } catch (error) {
+      console.error("Erro ao buscar usuário:", error)
+      return null
+    }
+  }
+
+  async syncParticipantsAsUsers(): Promise<void> {
+    try {
+      // Esta função deveria usar uma server action também
+      console.warn("syncParticipantsAsUsers deveria ser implementado via server action")
+    } catch (error) {
+      console.error("Erro ao sincronizar participantes:", error)
+    }
+  }
+
+  // Métodos privados para compatibilidade (não mais necessários)
+  private async getUsers(): Promise<User[]> {
+    // Esta função deveria usar uma server action
+    console.warn("getUsers deveria ser implementado via server action")
+    return []
   }
 
   private getPasswords(): Record<string, string> {
-    if (typeof window === "undefined") return {}
-
-    const stored = localStorage.getItem("gamified-sales-passwords")
-    if (!stored) {
-      // Senha padrão para admin
-      const defaultPasswords = { "1": "admin123" }
-      localStorage.setItem("gamified-sales-passwords", JSON.stringify(defaultPasswords))
-      return defaultPasswords
-    }
-
-    return JSON.parse(stored)
+    // Não mais necessário com Prisma
+    return {}
   }
 }
 

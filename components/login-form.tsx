@@ -24,7 +24,7 @@ export function LoginForm() {
     authService.syncParticipantsAsUsers()
   }, [])
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
@@ -41,7 +41,7 @@ export function LoginForm() {
     }
 
     // Verificar se precisa definir senha
-    if (authService.needsPasswordSetup(email)) {
+    if (await authService.needsPasswordSetup(email)) {
       setUserForSetup(user)
       setShowPasswordSetup(true)
       return

@@ -58,14 +58,13 @@ export function ParticipantsManager() {
     e.preventDefault()
 
     try {
-      console.log("[v0] === INICIANDO CADASTRO ===")
-      console.log("[v0] Dados do formulário:", formData)
-
       const authState = authService.getAuthState()
-      console.log("[v0] Admin logado:", authState.user)
-
-      const newParticipant = await saveParticipant(formData)
-      console.log("[v0] Participante salvo:", newParticipant)
+      
+      if (!authState.isAuthenticated) {
+        console.log("admin is not authenticatedooooo")
+      }
+      const newParticipant = await saveParticipant(formData, authState)
+      console.log("newParticipant", newParticipant)
 
       const newUser = authService.register(formData.name, formData.email, "participant")
       console.log("[v0] Usuário registrado no auth:", newUser)

@@ -19,7 +19,7 @@ export function PasswordSetup({ user, onPasswordSet }: PasswordSetupProps) {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
@@ -40,7 +40,7 @@ export function PasswordSetup({ user, onPasswordSet }: PasswordSetupProps) {
     // Definir senha
     const success = authService.setPassword(user.id, password)
 
-    if (success) {
+    if (await success) {
       // Fazer login automático com a nova senha
       authService.login(user.email, password)
       onPasswordSet()
