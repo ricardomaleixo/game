@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { useAuth } from "@/hooks/use-auth-prisma"
+import { findUserByEmail } from "@/app/actions/auth-actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,28 +17,60 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [showPasswordSetup, setShowPasswordSetup] = useState(false)
   const [userForSetup, setUserForSetup] = useState<any>(null)
+  const [showPasswordField, setShowPasswordField] = useState(false)
+  const [emailVerified, setEmailVerified] = useState(false)
   const { login } = useAuth()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setLoading(true)
 
-    if (!email || !password) {
-      setError("Digite email e senha")
+    if (!email) {
+      setError("Digite seu email")
       setLoading(false)
       return
     }
 
     try {
-      const result = await login(email, password)
-      
+      const result = await findUserByEmail(email)
+
+      if (!result.success) {
+        setError(result.error || "Email não encontrado. Verifique com o administrador.")
+        setLoading(false)
+        return
+      }
+
+      const user = result.user!
+
+      // Verificar se precisa definir senha
       if (result.needsPasswordSetup) {
-        // Mostrar formulário de configuração de senha
-        setUserForSetup({ id: result.participantId, email, name: email })
+        setUserForSetup(user)
         setShowPasswordSetup(true)
-      } else if (!result.success) {
-        setError(result.error || "Credenciais inválidas")
+        setLoading(false)
+        return
+      }
+
+      // Se já tem senha, mostrar campo de senha
+      setEmailVerified(true)
+      setShowPasswordField(true)
+      setLoading(false)
+    } catch (error) {
+      console.error("Erro ao verificar email:", error)
+      setError("Erro interno. Tente novamente.")
+      setLoading(false)
+    }
+  }
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    setLoading(true)
+
+    try {
+      const result = await login(email, password)
+      if (!result.success) {
+        setError(result.error || "Senha incorreta")
       }
       // Se result.success for true, o redirecionamento será feito automaticamente
     } catch (error) {
@@ -53,6 +86,13 @@ export function LoginForm() {
     setUserForSetup(null)
     // Recarregar a página para fazer login automático
     window.location.reload()
+  }
+
+  const handleBackToEmail = () => {
+    setShowPasswordField(false)
+    setEmailVerified(false)
+    setPassword("")
+    setError("")
   }
 
   if (showPasswordSetup && userForSetup) {
@@ -80,38 +120,59 @@ export function LoginForm() {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">Entrar</CardTitle>
             <CardDescription className="text-center">
-              Digite suas credenciais para acessar o sistema
+              {!showPasswordField ? "Digite seu email para continuar" : "Digite sua senha"}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Digite sua senha"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              {error && <p className="text-sm text-destructive text-center">{error}</p>}
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Entrando..." : "Entrar"}
-              </Button>
-            </form>
+            {!showPasswordField ? (
+              // Primeira etapa: apenas email
+              <form onSubmit={handleEmailSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                {error && <p className="text-sm text-destructive text-center">{error}</p>}
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Verificando..." : "Continuar"}
+                </Button>
+              </form>
+            ) : (
+              // Segunda etapa: senha
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email-display">Email</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input id="email-display" type="email" value={email} disabled className="flex-1" />
+                    <Button type="button" variant="outline" size="sm" onClick={handleBackToEmail}>
+                      ←
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Senha</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Digite sua senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    autoFocus
+                  />
+                </div>
+                {error && <p className="text-sm text-destructive text-center">{error}</p>}
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Entrando..." : "Entrar"}
+                </Button>
+              </form>
+            )}
 
             <div className="mt-6 space-y-4">
               <div className="p-4 bg-chart-1/10 border border-chart-1/20 rounded-lg">
@@ -120,8 +181,8 @@ export function LoginForm() {
                   <div className="text-xs space-y-1">
                     <p className="font-medium text-chart-1">Primeira vez no sistema?</p>
                     <p className="text-muted-foreground">
-                      Digite seu email e qualquer senha. Se for seu primeiro acesso, você será direcionado
-                      para criar sua senha.
+                      Digite seu email cadastrado pelo administrador. Se for seu primeiro acesso, você será direcionado
+                      para criar sua senha automaticamente.
                     </p>
                   </div>
                 </div>

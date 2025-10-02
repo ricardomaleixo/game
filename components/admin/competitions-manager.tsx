@@ -96,8 +96,6 @@ export function CompetitionsManager() {
           type: formData.type,
           startDate: formData.startDate,
           endDate: formData.endDate,
-          isActive: true,
-          rules: {},
           participants: formData.selectedParticipants,
         })
         setIsDialogOpen(false)

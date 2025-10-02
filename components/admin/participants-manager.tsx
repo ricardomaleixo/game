@@ -58,23 +58,20 @@ export function ParticipantsManager() {
     e.preventDefault()
 
     try {
-      const authState = authService.getAuthState()
+      const authState = await authService.getAuthState()
       
       if (!authState.isAuthenticated) {
-        console.log("admin is not authenticatedooooo")
+        return;
       }
-      const newParticipant = await saveParticipant(formData)
-      console.log("newParticipant", newParticipant)
 
-      const newUser = authService.register(formData.name, formData.email, "participant")
-      console.log("[v0] Usuário registrado no auth:", newUser)
+      await saveParticipant(formData)      
+
+      // await authService.register(formData.name, formData.email, "participant")
 
       setFormData({ name: "", email: "", position: "" })
       setIsDialogOpen(false)
 
-      console.log("[v0] Recarregando lista de participantes...")
       await loadParticipants()
-      console.log("[v0] === CADASTRO CONCLUÍDO ===")
     } catch (error) {
       console.error("[v0] ERRO no cadastro:", error)
     }

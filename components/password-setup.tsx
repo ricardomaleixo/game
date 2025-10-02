@@ -41,12 +41,12 @@ export function PasswordSetup({ user, onPasswordSet }: PasswordSetupProps) {
 
     try {
       // Definir senha
-      const result = await setParticipantPassword(user.email, password)
+      const result = await setParticipantPassword(user.id, password)
 
       if (result.success) {
         // Fazer login automático com a nova senha
-        const loginSuccess = await login(user.email, password)
-        if (loginSuccess) {
+        const loginResult = await login(user.email, password)
+        if (loginResult.success) {
           onPasswordSet()
         } else {
           setError("Senha configurada, mas erro no login automático. Tente fazer login novamente.")

@@ -272,7 +272,7 @@ export async function registerParticipant(name: string, email: string, position:
     })
 
     if (existingParticipants.length > 0) {
-      return { success: false, error: "Email já está em uso por outro participante" }
+      return { success: false, error: `Email já está em uso por outro participante ${existingParticipants}` }
     }
 
     // Obter admin atual
@@ -364,7 +364,7 @@ export async function findUserByEmail(email: string): Promise<{ success: boolean
           role: "participant",
           createdAt: participant.createdAt.toISOString()
         },
-        needsPasswordSetup: true // Participantes sempre precisam configurar senha no primeiro login
+        needsPasswordSetup: !participant.password // Precisa configurar senha se não tem password
       }
     }
 
@@ -380,7 +380,7 @@ export async function setParticipantPassword(participantId: string, password: st
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    const updatedParticipant = await prisma.participant.update({
+    await prisma.participant.update({
       where: { id: participantId },
       data: { password: hashedPassword }
     });
@@ -388,7 +388,7 @@ export async function setParticipantPassword(participantId: string, password: st
     return { success: true, message: "Senha definida com sucesso" };
   } catch (error) {
     console.error("Erro ao definir senha do participante:", error);
-    return { success: false, message: "Erro ao definir senha" };
+    return { success: false, message: "Erro ao definir senha auth actions" };
   }
 }
 

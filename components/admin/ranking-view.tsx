@@ -29,8 +29,8 @@ export function RankingView() {
       const competitions = await getCompetitions()
       const competitionWinners: { [key: string]: string } = {}
 
-      competitions.forEach((competition) => {
-        const winner = reportsService.determineWinner(competition)
+      competitions.forEach(async (competition) => {
+        const winner = await reportsService.determineWinner(competition)
         competitionWinners[competition.type] = winner.name
       })
 
@@ -68,8 +68,8 @@ export function RankingView() {
     }
   }
 
-  const exportRanking = () => {
-    const reportData = reportsService.generateFullReport()
+  const exportRanking = async () => {
+    const reportData = await reportsService.generateFullReport()
     const csv = reportsService.exportToCSV(reportData)
 
     const blob = new Blob([csv], { type: "text/csv" })
@@ -91,8 +91,8 @@ export function RankingView() {
       const competitions = await getCompetitions()
       const activeCompetitions = competitions.filter((c) => c.isActive)
 
-      activeCompetitions.forEach((competition) => {
-        const winner = reportsService.determineWinner(competition)
+      activeCompetitions.forEach(async (competition) => {
+        const winner = await reportsService.determineWinner(competition)
         // In a real app, you would save this to the database
         console.log(`Vencedor da ${competition.name}: ${winner.name} com ${winner.points} pontos`)
       })

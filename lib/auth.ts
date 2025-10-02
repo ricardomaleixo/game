@@ -5,9 +5,9 @@ import {
   registerAdmin, 
   registerParticipant, 
   changePassword, 
-  getAuthState,
   setParticipantPassword,
-  participantNeedsPasswordSetup
+  participantNeedsPasswordSetup,
+  findUserByEmail as findUserByEmailAction
 } from "@/app/actions/auth-actions"
 import type { AuthUser } from "@/app/actions/auth-actions"
 
@@ -20,22 +20,15 @@ export interface AuthState {
 }
 
 class AuthService {
-  private storageKey = "gamified-sales-auth"
-
-  getAuthState(): AuthState {
-    if (typeof window === "undefined") {
-      return { user: null, isAuthenticated: false }
-    }
-
-    const stored = localStorage.getItem(this.storageKey)
-    if (!stored) {
-      return { user: null, isAuthenticated: false }
-    }
-
+  async getAuthState(): Promise<AuthState> {
     try {
-      const user = JSON.parse(stored)
-      return { user, isAuthenticated: true }
-    } catch {
+      const user = await getCurrentUser()
+      return { 
+        user, 
+        isAuthenticated: !!user 
+      }
+    } catch (error) {
+      console.error("Erro ao obter estado de autenticação:", error)
       return { user: null, isAuthenticated: false }
     }
   }
@@ -54,11 +47,6 @@ class AuthService {
           ...(result.user.hasOwnProperty("needsPasswordSetup") && { needsPasswordSetup: (result.user as any).needsPasswordSetup })
         }
 
-        // Salvar no localStorage para compatibilidade com código cliente existente
-        if (typeof window !== "undefined") {
-          localStorage.setItem(this.storageKey, JSON.stringify(user))
-        }
-        
         return user
       }
       return null
@@ -72,17 +60,8 @@ class AuthService {
     try {
       // Usar server action para logout
       await logoutUser()
-      
-      // Também limpar localStorage para compatibilidade
-      if (typeof window !== "undefined") {
-        localStorage.removeItem(this.storageKey)
-      }
     } catch (error) {
       console.error("Erro no logout:", error)
-      // Mesmo com erro, limpar localStorage
-      if (typeof window !== "undefined") {
-        localStorage.removeItem(this.storageKey)
-      }
     }
   }
 
@@ -125,34 +104,32 @@ class AuthService {
 
   async setPassword(userId: string, password: string): Promise<boolean> {
     try {
-      // Esta função deveria usar uma server action também
-      // Por agora, retornar false indicando que não está implementada
-      console.warn("setPassword deveria ser implementado via server action")
-      return false
+      // Usar a função setParticipantPassword para participantes
+      const result = await setParticipantPassword(userId, password)
+      return result.success
     } catch (error) {
-      console.error("Erro ao definir senha:", error)
+      console.error("Erro ao definir senha authTS:", error)
       return false
     }
   }
 
   async findUserByEmail(email: string): Promise<User | null> {
     try {
-      // Esta função deveria usar uma server action também
-      // Por agora, implementação simplificada
-      console.warn("findUserByEmail deveria ser implementado via server action")
+      const result = await findUserByEmailAction(email)
+      if (result.success && result.user) {
+        return {
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email,
+          role: result.user.role,
+          createdAt: result.user.createdAt,
+          needsPasswordSetup: result.user.needsPasswordSetup
+        }
+      }
       return null
     } catch (error) {
       console.error("Erro ao buscar usuário:", error)
       return null
-    }
-  }
-
-  async syncParticipantsAsUsers(): Promise<void> {
-    try {
-      // Esta função deveria usar uma server action também
-      console.warn("syncParticipantsAsUsers deveria ser implementado via server action")
-    } catch (error) {
-      console.error("Erro ao sincronizar participantes:", error)
     }
   }
 
@@ -174,18 +151,6 @@ class AuthService {
       console.error("Erro ao verificar necessidade de senha:", error)
       return false
     }
-  }
-
-  // Métodos privados para compatibilidade (não mais necessários)
-  private async getUsers(): Promise<User[]> {
-    // Esta função deveria usar uma server action
-    console.warn("getUsers deveria ser implementado via server action")
-    return []
-  }
-
-  private getPasswords(): Record<string, string> {
-    // Não mais necessário com Prisma
-    return {}
   }
 }
 

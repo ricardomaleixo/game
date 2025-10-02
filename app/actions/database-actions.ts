@@ -1,6 +1,7 @@
 "use server"
 
 import { getCurrentUser } from "./auth-actions"
+import { prisma } from "@/lib/prisma"
 
 async function getCurrentAdminId(): Promise<string | null> {
   const user = await getCurrentUser()
@@ -17,7 +18,6 @@ export async function getParticipants() {
       return []
     }
     
-    const { prisma } = await import("@/lib/prisma")
     const participants = await prisma.participant.findMany({
       where: { adminId },
       orderBy: { points: "desc" },
@@ -45,7 +45,18 @@ export async function saveParticipant(participant: { name: string; email: string
       throw new Error("Admin não autenticado")
     }
 
-    const { prisma } = await import("@/lib/prisma")
+    // Verificar se já existe um participante com esse email para este admin
+    const existingParticipant = await prisma.participant.findFirst({
+      where: {
+        email: participant.email,
+        adminId
+      }
+    })
+
+    if (existingParticipant) {
+      throw new Error(`Já existe um participante com o email ${participant.email}`)
+    }
+
     const newParticipant = await prisma.participant.create({
       data: {
         name: participant.name,
@@ -67,6 +78,12 @@ export async function saveParticipant(participant: { name: string; email: string
     }
   } catch (error) {
     console.error("Error saving participant:", error)
+    
+    // Verificar se é erro de constraint única
+    if (error instanceof Error && error.message.includes("Unique constraint failed")) {
+      throw new Error(`Já existe um participante com o email ${participant.email}`)
+    }
+    
     throw error
   }
 }
@@ -77,8 +94,6 @@ export async function updateParticipant(id: string, updates: { name?: string; em
     if (!adminId) {
       throw new Error("Admin não autenticado")
     }
-
-    const { prisma } = await import("@/lib/prisma")
     await prisma.participant.updateMany({
       where: { id, adminId },
       data: updates,
@@ -96,7 +111,6 @@ export async function deleteParticipant(id: string) {
       throw new Error("Admin não autenticado")
     }
 
-    const { prisma } = await import("@/lib/prisma")
     // O Prisma vai deletar automaticamente vendas e conquistas relacionadas (CASCADE)
     await prisma.participant.deleteMany({
       where: { id, adminId },
@@ -112,7 +126,6 @@ export async function getCompetitions() {
     const adminId = await getCurrentAdminId()
     if (!adminId) return []
 
-    const { prisma } = await import("@/lib/prisma")
     const competitions = await prisma.competition.findMany({
       where: { adminId },
     })
@@ -138,7 +151,8 @@ export async function saveCompetition(competition: {
   name: string
   type: "tower" | "race" | "treasure" | "medals" | "missions"
   startDate: string
-  endDate: string
+  endDate: string,
+  participants: string[]
 }) {
   try {
     const adminId = await getCurrentAdminId()
@@ -146,7 +160,6 @@ export async function saveCompetition(competition: {
       throw new Error("Admin não autenticado")
     }
 
-    const { prisma } = await import("@/lib/prisma")
     const newCompetition = await prisma.competition.create({
       data: {
         name: competition.name,
@@ -192,7 +205,6 @@ export async function updateCompetition(id: string, updates: {
       throw new Error("Admin não autenticado")
     }
 
-    const { prisma } = await import("@/lib/prisma")
     const updateData: any = { ...updates }
     if (updates.startDate) updateData.startDate = new Date(updates.startDate)
     if (updates.endDate) updateData.endDate = new Date(updates.endDate)
@@ -214,7 +226,6 @@ export async function deleteCompetition(id: string) {
       throw new Error("Admin não autenticado")
     }
 
-    const { prisma } = await import("@/lib/prisma")
     await prisma.competition.deleteMany({
       where: { id, adminId },
     })
@@ -229,7 +240,6 @@ export async function getGameRules() {
     const adminId = await getCurrentAdminId()
     if (!adminId) return []
 
-    const { prisma } = await import("@/lib/prisma")
     const rules = await prisma.gameRule.findMany({
       where: { adminId },
     })
@@ -247,14 +257,13 @@ export async function getGameRules() {
   }
 }
 
-export async function saveGameRule(rule: { productName: string; points: number }) {
+export async function saveGameRule(rule: { productName: string; points: number, isActive: boolean }) {
   try {
     const adminId = await getCurrentAdminId()
     if (!adminId) {
       throw new Error("Admin não autenticado")
     }
 
-    const { prisma } = await import("@/lib/prisma")
     const newRule = await prisma.gameRule.create({
       data: {
         productName: rule.productName,
@@ -284,7 +293,6 @@ export async function updateGameRule(id: string, updates: { productName?: string
       throw new Error("Admin não autenticado")
     }
 
-    const { prisma } = await import("@/lib/prisma")
     await prisma.gameRule.updateMany({
       where: { id, adminId },
       data: updates,
@@ -302,7 +310,6 @@ export async function deleteGameRule(id: string) {
       throw new Error("Admin não autenticado")
     }
 
-    const { prisma } = await import("@/lib/prisma")
     await prisma.gameRule.deleteMany({
       where: { id, adminId },
     })
@@ -317,7 +324,6 @@ export async function getSales() {
     const adminId = await getCurrentAdminId()
     if (!adminId) return []
 
-    const { prisma } = await import("@/lib/prisma")
     const sales = await prisma.sale.findMany({
       where: { adminId },
       orderBy: { date: "desc" },
@@ -345,8 +351,6 @@ export async function saveSale(sale: { participantId: string; productName: strin
       throw new Error("Admin não autenticado")
     }
 
-    const { prisma } = await import("@/lib/prisma")
-    
     // Usar transação para garantir consistência
     const result = await prisma.$transaction(async (tx) => {
       // Criar a venda
@@ -395,8 +399,6 @@ export async function updateSale(id: string, updates: { participantId?: string; 
     if (!adminId) {
       throw new Error("Admin não autenticado")
     }
-
-    const { prisma } = await import("@/lib/prisma")
     
     await prisma.$transaction(async (tx) => {
       // Buscar venda atual
@@ -455,8 +457,6 @@ export async function deleteSale(id: string) {
     if (!adminId) {
       throw new Error("Admin não autenticado")
     }
-
-    const { prisma } = await import("@/lib/prisma")
     
     await prisma.$transaction(async (tx) => {
       // Buscar venda para remover pontos
@@ -488,7 +488,6 @@ export async function getAchievements() {
     const adminId = await getCurrentAdminId()
     if (!adminId) return []
 
-    const { prisma } = await import("@/lib/prisma")
     const achievements = await prisma.achievement.findMany({
       where: { adminId },
     })
@@ -523,7 +522,6 @@ export async function saveAchievement(achievement: {
       throw new Error("Admin não autenticado")
     }
 
-    const { prisma } = await import("@/lib/prisma")
     const newAchievement = await prisma.achievement.create({
       data: {
         participantId: achievement.participantId,
@@ -559,8 +557,6 @@ export async function resetCompetition() {
     if (!adminId) {
       throw new Error("Admin não autenticado")
     }
-
-    const { prisma } = await import("@/lib/prisma")
     await prisma.$transaction(async (tx) => {
       // Reset pontos dos participantes
       await tx.participant.updateMany({
@@ -590,8 +586,6 @@ export async function fixNegativePoints() {
     if (!adminId) {
       throw new Error("Admin não autenticado")
     }
-
-    const { prisma } = await import("@/lib/prisma")
     await prisma.participant.updateMany({
       where: {
         adminId,
@@ -611,8 +605,6 @@ export async function clearAllUserData() {
     if (!adminId) {
       throw new Error("Admin não autenticado")
     }
-
-    const { prisma } = await import("@/lib/prisma")
     await prisma.$transaction(async (tx) => {
       await tx.achievement.deleteMany({ where: { adminId } })
       await tx.sale.deleteMany({ where: { adminId } })

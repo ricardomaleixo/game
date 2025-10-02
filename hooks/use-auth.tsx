@@ -4,9 +4,9 @@ import { useState, useEffect, createContext, useContext, type ReactNode } from "
 import { authService, type User, type AuthState } from "@/lib/auth"
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => boolean
+  login: (email: string, password: string) => Promise<boolean>
   logout: () => void
-  register: (name: string, email: string, role: "admin" | "participant") => User
+  register: (name: string, email: string, role: "admin" | "participant") => Promise<User>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -15,11 +15,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>({ user: null, isAuthenticated: false })
 
   useEffect(() => {
-    setAuthState(authService.getAuthState())
+    const fetchAuthState = async () => {
+      setAuthState(await authService.getAuthState())
+    }
+    fetchAuthState()
   }, [])
 
-  const login = (email: string, password: string): boolean => {
-    const user = authService.login(email, password)
+  const login = async (email: string, password: string): Promise<boolean> => {
+    const user = await authService.login(email, password)
     if (user) {
       setAuthState({ user, isAuthenticated: true })
       return true
@@ -32,8 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthState({ user: null, isAuthenticated: false })
   }
 
-  const register = (name: string, email: string, role: "admin" | "participant"): User => {
-    return authService.register(name, email, role)
+  const register = async (name: string, email: string, role: "admin" | "participant"): Promise<User> => {
+    return await authService.register(name, email, role)
   }
 
   return <AuthContext.Provider value={{ ...authState, login, logout, register }}>{children}</AuthContext.Provider>

@@ -37,7 +37,7 @@ export function ReportsDashboard() {
   const generateReport = async () => {
     setIsGenerating(true)
     try {
-      const data = reportsService.generateFullReport(dateRange.startDate, dateRange.endDate)
+      const data = await reportsService.generateFullReport(dateRange.startDate, dateRange.endDate)
       setReportData(data)
     } catch (error) {
       console.error("Erro ao gerar relatório:", error)
