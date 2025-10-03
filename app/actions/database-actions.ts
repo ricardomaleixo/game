@@ -11,6 +11,29 @@ async function getCurrentAdminId(): Promise<string | null> {
   return user.id
 }
 
+async function getCurrentParticipantId(): Promise<string | null> {
+  const user = await getCurrentUser()
+  if (!user || user.role !== "participant") {
+    return null
+  }
+  return user.id
+}
+
+async function getCurrentParticipantData(): Promise<{ id: string; adminId: string } | null> {
+  const user = await getCurrentUser()
+  console.log("[getCurrentParticipantData] Usuário atual:", user)
+  
+  if (!user || user.role !== "participant") {
+    console.log("[getCurrentParticipantData] Usuário não é participante ou não existe")
+    return null
+  }
+  
+  const result = { id: user.id, adminId: user.adminId! }
+  console.log("[getCurrentParticipantData] Retornando dados:", result)
+  
+  return result
+}
+
 export async function getParticipants() {
   try {
     const adminId = await getCurrentAdminId()
@@ -620,4 +643,161 @@ export async function clearAllUserData() {
 
 export async function getRanking() {
   return await getParticipants()
+}
+
+// ====== FUNÇÕES ESPECÍFICAS PARA PARTICIPANTES ======
+
+// Buscar dados do próprio participante
+export async function getMyParticipantData() {
+  try {
+    const participantData = await getCurrentParticipantData()
+    if (!participantData) {
+      return null
+    }
+
+    const participant = await prisma.participant.findUnique({
+      where: { id: participantData.id },
+    })
+
+    if (!participant) return null
+
+    return {
+      id: participant.id,
+      name: participant.name,
+      email: participant.email,
+      position: participant.position,
+      points: participant.points,
+      createdAt: participant.createdAt.toISOString(),
+      adminId: participant.adminId,
+    }
+  } catch (error) {
+    console.error("Error fetching my participant data:", error)
+    return null
+  }
+}
+
+// Buscar competições do admin do participante
+export async function getMyCompetitions() {
+  try {
+    const participantData = await getCurrentParticipantData()
+    console.log("[getMyCompetitions] Dados do participante:", participantData)
+    
+    if (!participantData) {
+      console.log("[getMyCompetitions] Nenhum dado de participante encontrado")
+      return []
+    }
+
+    const competitions = await prisma.competition.findMany({
+      where: { adminId: participantData.adminId },
+    })
+
+    console.log("[getMyCompetitions] Competições encontradas:", competitions.length)
+    console.log("[getMyCompetitions] Competições:", competitions)
+
+    return competitions.map((c) => ({
+      id: c.id,
+      name: c.name,
+      type: c.type as "tower" | "race" | "treasure" | "medals" | "missions",
+      startDate: c.startDate.toISOString(),
+      endDate: c.endDate.toISOString(),
+      isActive: c.isActive,
+      rules: c.rules as any,
+      participants: c.participants as string[],
+      adminId: c.adminId,
+    }))
+  } catch (error) {
+    console.error("Error fetching my competitions:", error)
+    return []
+  }
+}
+
+// Buscar minhas vendas
+export async function getMySales() {
+  try {
+    const participantData = await getCurrentParticipantData()
+    if (!participantData) {
+      return []
+    }
+
+    const sales = await prisma.sale.findMany({
+      where: { 
+        participantId: participantData.id,
+        adminId: participantData.adminId 
+      },
+      orderBy: { date: "desc" },
+    })
+
+    return sales.map((s) => ({
+      id: s.id,
+      participantId: s.participantId,
+      productName: s.productName,
+      points: s.points,
+      date: s.date.toISOString(),
+      type: s.type as "sale" | "rental",
+      adminId: s.adminId,
+    }))
+  } catch (error) {
+    console.error("Error fetching my sales:", error)
+    return []
+  }
+}
+
+// Buscar minhas conquistas
+export async function getMyAchievements() {
+  try {
+    const participantData = await getCurrentParticipantData()
+    if (!participantData) {
+      return []
+    }
+
+    const achievements = await prisma.achievement.findMany({
+      where: { 
+        participantId: participantData.id,
+        adminId: participantData.adminId 
+      },
+      orderBy: { date: "desc" },
+    })
+
+    return achievements.map((a) => ({
+      id: a.id,
+      participantId: a.participantId,
+      competitionId: a.competitionId || "",
+      type: a.type as "gold" | "silver" | "bronze" | "treasure" | "mission",
+      description: a.description,
+      points: a.points,
+      date: a.date.toISOString(),
+      adminId: a.adminId,
+    }))
+  } catch (error) {
+    console.error("Error fetching my achievements:", error)
+    return []
+  }
+}
+
+// Buscar ranking da minha equipe (outros participantes do mesmo admin)
+export async function getMyTeamRanking() {
+  try {
+    const participantData = await getCurrentParticipantData()
+    if (!participantData) {
+      return []
+    }
+
+    const participants = await prisma.participant.findMany({
+      where: { adminId: participantData.adminId },
+      orderBy: { points: "desc" },
+    })
+
+    return participants.map((p) => ({
+      id: p.id,
+      name: p.name,
+      email: p.email,
+      position: p.position,
+      points: p.points,
+      createdAt: p.createdAt.toISOString(),
+      adminId: p.adminId,
+    }))
+  } catch (error) {
+    console.error("Error fetching my team ranking:", error)
+    return []
+  }
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "@/hooks/use-auth-prisma"
-import { getParticipants } from "@/app/actions/database-actions"
+import { getMyTeamRanking, getMyParticipantData } from "@/app/actions/database-actions"
 import type { Participant } from "@/lib/database"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -23,12 +23,11 @@ export function TeamComparison() {
   const loadData = async () => {
     setIsLoading(true)
     try {
-      const allParticipants = await getParticipants()
-      const ranking = allParticipants.sort((a, b) => b.points - a.points)
-      setParticipants(ranking)
+      const teamRanking = await getMyTeamRanking()
+      setParticipants(teamRanking)
 
-      const current = ranking.find((p) => p.email === user?.email)
-      setCurrentParticipant(current || null)
+      const current = await getMyParticipantData()
+      setCurrentParticipant(current)
     } catch (error) {
       console.error("Erro ao carregar dados da equipe:", error)
     } finally {

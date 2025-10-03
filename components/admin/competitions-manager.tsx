@@ -118,11 +118,18 @@ export function CompetitionsManager() {
 
   const handleEdit = (competition: Competition) => {
     setEditingCompetition(competition)
+    
+    // Converter datas ISO para formato YYYY-MM-DD esperado pelo input date
+    const formatDateForInput = (dateString: string) => {
+      const date = new Date(dateString)
+      return date.toISOString().split('T')[0]
+    }
+    
     setFormData({
       name: competition.name,
       type: competition.type,
-      startDate: competition.startDate,
-      endDate: competition.endDate,
+      startDate: formatDateForInput(competition.startDate),
+      endDate: formatDateForInput(competition.endDate),
       selectedParticipants: competition.participants,
     })
     setIsEditDialogOpen(true)

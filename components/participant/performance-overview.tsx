@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "@/hooks/use-auth-prisma"
-import { getParticipants, getSales } from "@/app/actions/database-actions"
+import { getMyParticipantData, getMySales, getMyTeamRanking } from "@/app/actions/database-actions"
 import type { Sale, Participant } from "@/lib/database"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -32,13 +32,11 @@ export function PerformanceOverview() {
   const loadData = async () => {
     setIsLoading(true)
     try {
-      const participants = await getParticipants()
-      const currentParticipant = participants.find((p) => p.email === user?.email)
-      setParticipant(currentParticipant || null)
+      const currentParticipant = await getMyParticipantData()
+      setParticipant(currentParticipant)
 
       if (currentParticipant) {
-        const allSales = await getSales()
-        const participantSales = allSales.filter((s) => s.participantId === currentParticipant.id)
+        const participantSales = await getMySales()
         setSales(participantSales)
 
         // Calculate stats - using points instead of value since we don't have value field
@@ -56,8 +54,8 @@ export function PerformanceOverview() {
         const thisMonthSales = participantSales.filter((s) => new Date(s.date) >= oneMonthAgo).length
 
         // Ranking position
-        const ranking = participants.sort((a, b) => b.points - a.points)
-        const rankingPosition = ranking.findIndex((p) => p.id === currentParticipant.id) + 1
+        const teamRanking = await getMyTeamRanking()
+        const rankingPosition = teamRanking.findIndex((p) => p.id === currentParticipant.id) + 1
 
         setStats({
           totalSales: participantSales.length,

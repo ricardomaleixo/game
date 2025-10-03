@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "@/hooks/use-auth-prisma"
-import { getAchievements, getSales, getParticipants } from "@/app/actions/database-actions"
+import { getMyAchievements, getMySales, getMyParticipantData } from "@/app/actions/database-actions"
 import type { Achievement, Sale, Participant } from "@/lib/database"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -30,21 +30,14 @@ export function Achievements() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const [participantsData, achievementsData, salesData] = await Promise.all([
-        getParticipants(),
-        getAchievements(),
-        getSales(),
+      const [currentParticipant, participantAchievements, participantSales] = await Promise.all([
+        getMyParticipantData(),
+        getMyAchievements(),
+        getMySales(),
       ])
 
-      const currentParticipant = participantsData.find((p: Participant) => p.email === user?.email)
-
       if (currentParticipant) {
-        const participantAchievements = achievementsData.filter(
-          (a: Achievement) => a.participantId === currentParticipant.id,
-        )
         setAchievements(participantAchievements)
-
-        const participantSales = salesData.filter((s: Sale) => s.participantId === currentParticipant.id)
         setSales(participantSales)
 
         // Calculate achievement stats

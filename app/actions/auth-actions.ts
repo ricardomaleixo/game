@@ -10,6 +10,7 @@ export interface AuthUser {
   email: string
   role: "admin" | "participant"
   createdAt: string
+  adminId?: string // Para participantes
   needsPasswordSetup?: boolean
 }
 
@@ -68,6 +69,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
         email: participant.email,
         role: 'participant',
         createdAt: participant.createdAt.toISOString(),
+        adminId: participant.adminId,
       }
     }
     
@@ -159,6 +161,7 @@ export async function loginUser(email: string, password: string) {
             email: participant.email,
             role: 'participant' as const,
             createdAt: participant.createdAt.toISOString(),
+            adminId: participant.adminId,
           },
         };
       }

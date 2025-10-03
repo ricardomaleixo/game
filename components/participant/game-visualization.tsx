@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "@/hooks/use-auth-prisma"
-import { getCompetitions, getParticipants } from "@/app/actions/database-actions"
+import { getMyCompetitions, getMyParticipantData } from "@/app/actions/database-actions"
 import type { Competition, Participant } from "@/lib/database"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -17,6 +17,7 @@ export function GameVisualization() {
   const { user } = useAuth()
   const [activeCompetition, setActiveCompetition] = useState<Competition | null>(null)
   const [participant, setParticipant] = useState<Participant | null>(null)
+  const [allCompetitions, setAllCompetitions] = useState<Competition[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
@@ -28,51 +29,52 @@ export function GameVisualization() {
   const loadData = async () => {
     setIsLoading(true)
     try {
-      console.log("[v0] GameVisualization - Iniciando carregamento de dados")
-      console.log("[v0] GameVisualization - Usuário logado:", user)
-
-      const allCompetitions = await getCompetitions()
-      console.log("[v0] GameVisualization - Todas as competições carregadas:", allCompetitions)
+      const allCompetitions = await getMyCompetitions()
+      setAllCompetitions(allCompetitions)
 
       const now = new Date()
-      console.log("[v0] GameVisualization - Data atual:", now)
 
       const currentActiveCompetition = allCompetitions.find((c) => {
-        console.log(`[v0] GameVisualization - Verificando competição: ${c.name}`)
-        console.log(`[v0] GameVisualization - isActive: ${c.isActive}`)
-        console.log(`[v0] GameVisualization - startDate: ${c.startDate}`)
-        console.log(`[v0] GameVisualization - endDate: ${c.endDate}`)
-
+       
         if (!c.isActive) {
-          console.log(`[v0] GameVisualization - Competição ${c.name} não está ativa`)
           return false
         }
 
+        // Converter strings de data para objetos Date, ignorando horário
         const startDate = new Date(c.startDate)
         const endDate = new Date(c.endDate)
+        
+        // Normalizar as datas para meia-noite para comparação apenas da data
+        const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
+        const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate())
 
-        console.log(`[v0] GameVisualization - startDate parsed: ${startDate}`)
-        console.log(`[v0] GameVisualization - endDate parsed: ${endDate}`)
-        console.log(`[v0] GameVisualization - now >= startDate: ${now >= startDate}`)
-        console.log(`[v0] GameVisualization - now <= endDate: ${now <= endDate}`)
+        const isAfterStart = currentDate >= startDateOnly
+        const isBeforeEnd = currentDate <= endDateOnly
 
-        const isInPeriod = now >= startDate && now <= endDate
-        console.log(`[v0] GameVisualization - Competição ${c.name} está no período: ${isInPeriod}`)
+        const isInPeriod = isAfterStart && isBeforeEnd
 
         return isInPeriod
       })
 
-      console.log("[v0] GameVisualization - Competição ativa encontrada:", currentActiveCompetition)
       setActiveCompetition(currentActiveCompetition || null)
 
-      const participants = await getParticipants()
-      console.log("[v0] GameVisualization - Todos os participantes:", participants)
+      // Se não encontrou competição ativa, vamos mostrar mais detalhes
+      if (!currentActiveCompetition && allCompetitions.length > 0) {
+        allCompetitions.forEach((comp, index) => {
+          console.log(`[GameVisualization] Competição ${index + 1}:`, {
+            name: comp.name,
+            isActive: comp.isActive,
+            startDate: comp.startDate,
+            endDate: comp.endDate,
+            type: comp.type
+          })
+        })
+      }
 
-      const currentParticipant = participants.find((p) => p.email === user?.email)
-      console.log("[v0] GameVisualization - Participante atual encontrado:", currentParticipant)
-      console.log("[v0] GameVisualization - Email do usuário:", user?.email)
+      const currentParticipant = await getMyParticipantData()
 
-      setParticipant(currentParticipant || null)
+      setParticipant(currentParticipant)
     } catch (error) {
       console.error("Erro ao carregar dados da visualização de jogos:", error)
     } finally {
