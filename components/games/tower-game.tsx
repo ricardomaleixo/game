@@ -77,53 +77,53 @@ export function TowerGame({ competition, participant }: TowerGameProps) {
         </CardTitle>
         <CardDescription>Cada venda adiciona um andar à sua torre</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
         {/* Tower Visualization */}
         <div className="relative">
-          <div className="bg-gradient-to-t from-green-100 to-green-50 rounded-lg p-4 min-h-[200px] flex flex-col justify-end items-center">
+          <div className="bg-gradient-to-t from-green-100 to-green-50 rounded-lg p-2 sm:p-4 min-h-[150px] sm:min-h-[200px] flex flex-col justify-end items-center">
             {isLoading ? (
               <div className="text-center text-muted-foreground">
-                <p className="text-sm">Carregando torre...</p>
+                <p className="text-xs sm:text-sm">Carregando torre...</p>
               </div>
             ) : towerHeight === 0 ? (
               <div className="text-center text-muted-foreground">
-                <Building className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Sua torre aparecerá aqui</p>
+                <Building className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 opacity-50" />
+                <p className="text-xs sm:text-sm">Sua torre aparecerá aqui</p>
               </div>
             ) : (
-              <div className="flex flex-col items-center w-full max-w-[120px]">
+              <div className="flex flex-col items-center w-full max-w-[80px] sm:max-w-[120px]">
                 {renderTowerFloors()}
-                <div className="w-full h-4 bg-gradient-to-r from-gray-600 to-gray-800 rounded-sm mt-1" />
+                <div className="w-full h-3 sm:h-4 bg-gradient-to-r from-gray-600 to-gray-800 rounded-sm mt-1" />
                 {/* Ground */}
               </div>
             )}
           </div>
 
           {/* Tower Stats */}
-          <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg p-2 text-center">
-            <p className="text-2xl font-bold text-blue-600">{towerHeight}</p>
+          <div className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-white/90 backdrop-blur-sm rounded-lg p-1.5 sm:p-2 text-center">
+            <p className="text-lg sm:text-2xl font-bold text-blue-600">{towerHeight}</p>
             <p className="text-xs text-muted-foreground">andares</p>
           </div>
         </div>
 
         {/* Progress and Position */}
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Progresso</span>
-            <Badge variant={position <= 3 ? "default" : "secondary"}>#{position}</Badge>
+            <span className="text-xs sm:text-sm font-medium">Progresso</span>
+            <Badge variant={position <= 3 ? "default" : "secondary"} className="text-xs">#{position}</Badge>
           </div>
-          <Progress value={progressPercentage} className="progress-pulse" />
-          <div className="flex justify-between text-sm text-muted-foreground">
+          <Progress value={progressPercentage} className="progress-pulse h-2 sm:h-3" />
+          <div className="flex justify-between text-xs sm:text-sm text-muted-foreground">
             <span>{participant.points} pontos</span>
-            <span>{ranking[0]?.points || 0} pontos (líder)</span>
+            <span className="text-right">{ranking[0]?.points || 0} pontos (líder)</span>
           </div>
         </div>
 
         {/* Competition Info */}
-        <div className="bg-white/50 rounded-lg p-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Meta da Semana</span>
-            <Trophy className="h-4 w-4 text-yellow-500" />
+        <div className="bg-white/50 rounded-lg p-2 sm:p-3">
+          <div className="flex items-center justify-between mb-1 sm:mb-2">
+            <span className="text-xs sm:text-sm font-medium">Meta da Semana</span>
+            <Trophy className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />
           </div>
           <p className="text-xs text-muted-foreground">
             Termine com a torre mais alta para ganhar! Cada 10 pontos = 1 andar.

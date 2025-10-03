@@ -191,22 +191,22 @@ export function SalesManager() {
                   <span>Nova Venda</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="mx-2 sm:mx-0 max-w-md sm:max-w-lg">
                 <DialogHeader>
-                  <DialogTitle className="flex items-center space-x-2">
+                  <DialogTitle className="flex items-center space-x-2 text-base sm:text-lg">
                     <span>📈</span>
                     <span>Registrar Venda/Locação</span>
                   </DialogTitle>
-                  <DialogDescription>Adicione uma nova venda ou locação ao sistema</DialogDescription>
+                  <DialogDescription className="text-sm">Adicione uma nova venda ou locação ao sistema</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="participant">Vendedor</Label>
+                    <Label htmlFor="participant" className="text-sm">Vendedor</Label>
                     <Select
                       value={formData.participantId}
                       onValueChange={(value) => setFormData({ ...formData, participantId: value })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="min-h-[44px] text-base sm:text-sm">
                         <SelectValue placeholder="Selecione o vendedor" />
                       </SelectTrigger>
                       <SelectContent>
@@ -219,19 +219,19 @@ export function SalesManager() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="productName">Produto/Serviço</Label>
+                    <Label htmlFor="productName" className="text-sm">Produto/Serviço</Label>
                     <Select
                       value={formData.productName}
                       onValueChange={(value) => setFormData({ ...formData, productName: value })}
                     >
-                      <SelectTrigger className="w-full min-h-[44px]">
+                      <SelectTrigger className="w-full min-h-[44px] text-base sm:text-sm">
                         <SelectValue placeholder="Selecione o produto/serviço" />
                       </SelectTrigger>
-                      <SelectContent className="max-w-[400px]">
+                      <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-[400px]">
                         {rules
                           .filter((r) => r.isActive)
                           .map((rule) => (
-                            <SelectItem key={rule.id} value={rule.productName} className="max-w-[380px]">
+                            <SelectItem key={rule.id} value={rule.productName} className="max-w-full sm:max-w-[380px]">
                               <div className="flex flex-col items-start w-full">
                                 <span className="font-medium text-sm">{rule.productName}</span>
                                 <span className="text-xs text-muted-foreground">{rule.points} pts</span>
@@ -247,12 +247,12 @@ export function SalesManager() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="type">Tipo</Label>
+                    <Label htmlFor="type" className="text-sm">Tipo</Label>
                     <Select
                       value={formData.type}
                       onValueChange={(value: "sale" | "rental") => setFormData({ ...formData, type: value })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="min-h-[44px] text-base sm:text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -271,96 +271,106 @@ export function SalesManager() {
                       </div>
                     </div>
                   )}
-                  <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  <div className="flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="w-full sm:w-auto">
                       Cancelar
                     </Button>
-                    <Button type="submit">Registrar</Button>
+                    <Button type="submit" className="w-full sm:w-auto">Registrar</Button>
                   </div>
                 </form>
               </DialogContent>
             </Dialog>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-2 sm:p-6">
           {sales.length === 0 ? (
             <div className="text-center py-8">
-              <span className="text-6xl mb-4 block">📈</span>
-              <p className="text-muted-foreground">Nenhuma venda registrada ainda</p>
-              <p className="text-sm text-muted-foreground">Registre vendas para começar a pontuar</p>
+              <span className="text-4xl sm:text-6xl mb-4 block">📈</span>
+              <p className="text-muted-foreground text-sm sm:text-base">Nenhuma venda registrada ainda</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Registre vendas para começar a pontuar</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Vendedor</TableHead>
-                  <TableHead>Produto</TableHead>
-                  <TableHead>Pontos</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sales.map((sale) => (
-                  <TableRow key={sale.id}>
-                    <TableCell>
-                      <span className="font-medium">{getParticipantName(sale.participantId)}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span>{sale.productName}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-semibold text-chart-1">{sale.points} pts</span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={sale.type === "sale" ? "default" : "secondary"}>
-                        {sale.type === "sale" ? "Venda" : "Locação"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <span>{new Date(sale.date).toLocaleDateString("pt-BR")}</span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => handleEdit(sale)} className="h-8 w-8 p-0">
-                          ✏️
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(sale)}
-                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                        >
-                          🗑️
-                        </Button>
-                      </div>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table className="min-w-full">
+                <TableHeader className="hidden sm:table-header-group">
+                  <TableRow>
+                    <TableHead>Vendedor</TableHead>
+                    <TableHead>Produto</TableHead>
+                    <TableHead>Pontos</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {sales.map((sale) => (
+                    <TableRow key={sale.id} className="block sm:table-row border-b sm:border-b-0 p-3 sm:p-0 mb-3 sm:mb-0 bg-card rounded-lg sm:bg-transparent sm:rounded-none">
+                      <TableCell className="block sm:table-cell">
+                        <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Vendedor:</span>
+                        <span className="font-medium">{getParticipantName(sale.participantId)}</span>
+                      </TableCell>
+                      <TableCell className="block sm:table-cell">
+                        <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Produto:</span>
+                        <span>{sale.productName}</span>
+                      </TableCell>
+                      <TableCell className="block sm:table-cell">
+                        <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Pontos:</span>
+                        <span className="font-semibold text-chart-1">{sale.points} pts</span>
+                      </TableCell>
+                      <TableCell className="block sm:table-cell">
+                        <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Tipo:</span>
+                        <Badge variant={sale.type === "sale" ? "default" : "secondary"}>
+                          {sale.type === "sale" ? "Venda" : "Locação"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="block sm:table-cell">
+                        <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Data:</span>
+                        <span>{new Date(sale.date).toLocaleDateString("pt-BR")}</span>
+                      </TableCell>
+                      <TableCell className="block sm:table-cell">
+                        <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Ações:</span>
+                        <div className="flex items-center space-x-2">
+                          <Button variant="outline" size="sm" onClick={() => handleEdit(sale)} className="h-8 w-8 p-0 sm:h-8 sm:w-8 flex-1 sm:flex-none">
+                            <span className="sm:hidden mr-1">Editar</span>
+                            ✏️
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(sale)}
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive sm:h-8 sm:w-8 flex-1 sm:flex-none"
+                          >
+                            <span className="sm:hidden mr-1">Excluir</span>
+                            🗑️
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="mx-2 sm:mx-0 max-w-md sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
+            <DialogTitle className="flex items-center space-x-2 text-base sm:text-lg">
               <span>✏️</span>
               <span>Editar Venda/Locação</span>
             </DialogTitle>
-            <DialogDescription>Edite os dados da venda ou locação</DialogDescription>
+            <DialogDescription className="text-sm">Edite os dados da venda ou locação</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="participant">Vendedor</Label>
+              <Label htmlFor="participant" className="text-sm">Vendedor</Label>
               <Select
                 value={formData.participantId}
                 onValueChange={(value) => setFormData({ ...formData, participantId: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="min-h-[44px] text-base sm:text-sm">
                   <SelectValue placeholder="Selecione o vendedor" />
                 </SelectTrigger>
                 <SelectContent>
@@ -373,19 +383,19 @@ export function SalesManager() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="productName">Produto/Serviço</Label>
+              <Label htmlFor="productName" className="text-sm">Produto/Serviço</Label>
               <Select
                 value={formData.productName}
                 onValueChange={(value) => setFormData({ ...formData, productName: value })}
               >
-                <SelectTrigger className="w-full min-h-[44px]">
+                <SelectTrigger className="w-full min-h-[44px] text-base sm:text-sm">
                   <SelectValue placeholder="Selecione o produto/serviço" />
                 </SelectTrigger>
-                <SelectContent className="max-w-[400px]">
+                <SelectContent className="max-w-[calc(100vw-2rem)] sm:max-w-[400px]">
                   {rules
                     .filter((r) => r.isActive)
                     .map((rule) => (
-                      <SelectItem key={rule.id} value={rule.productName} className="max-w-[380px]">
+                      <SelectItem key={rule.id} value={rule.productName} className="max-w-full sm:max-w-[380px]">
                         <div className="flex flex-col items-start w-full">
                           <span className="font-medium text-sm">{rule.productName}</span>
                           <span className="text-xs text-muted-foreground">{rule.points} pts</span>
@@ -396,12 +406,12 @@ export function SalesManager() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="type">Tipo</Label>
+              <Label htmlFor="type" className="text-sm">Tipo</Label>
               <Select
                 value={formData.type}
                 onValueChange={(value: "sale" | "rental") => setFormData({ ...formData, type: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="min-h-[44px] text-base sm:text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -420,11 +430,11 @@ export function SalesManager() {
                 </div>
               </div>
             )}
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <div className="flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)} className="w-full sm:w-auto">
                 Cancelar
               </Button>
-              <Button type="submit">Salvar Alterações</Button>
+              <Button type="submit" className="w-full sm:w-auto">Salvar Alterações</Button>
             </div>
           </form>
         </DialogContent>

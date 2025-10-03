@@ -100,30 +100,30 @@ export function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10 flex items-center justify-center p-2 sm:p-4">
+      <div className="w-full max-w-md space-y-6 sm:space-y-8">
         {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="flex justify-center space-x-2 text-4xl">
+        <div className="text-center space-y-3 sm:space-y-4">
+          <div className="flex justify-center space-x-2 text-3xl sm:text-4xl">
             <span>🏆</span>
             <span>🎯</span>
             <span>🏅</span>
           </div>
-          <h1 className="text-3xl font-bold text-balance">Sistema Gamificado</h1>
-          <p className="text-muted-foreground text-pretty">
+          <h1 className="text-2xl sm:text-3xl font-bold text-balance">Sistema Gamificado</h1>
+          <p className="text-muted-foreground text-pretty text-sm sm:text-base">
             Transforme suas vendas em uma competição divertida e motivadora
           </p>
         </div>
 
         {/* Login Card */}
         <Card className="shadow-lg">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Entrar</CardTitle>
-            <CardDescription className="text-center">
+          <CardHeader className="space-y-1 p-4 sm:p-6">
+            <CardTitle className="text-xl sm:text-2xl text-center">Entrar</CardTitle>
+            <CardDescription className="text-center text-sm sm:text-base">
               {!showPasswordField ? "Digite seu email para continuar" : "Digite sua senha"}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
             {!showPasswordField ? (
               // Primeira etapa: apenas email
               <form onSubmit={handleEmailSubmit} className="space-y-4">
@@ -174,13 +174,13 @@ export function LoginForm() {
               </form>
             )}
 
-            <div className="mt-6 space-y-4">
-              <div className="p-4 bg-chart-1/10 border border-chart-1/20 rounded-lg">
+            <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
+              <div className="p-3 sm:p-4 bg-chart-1/10 border border-chart-1/20 rounded-lg">
                 <div className="flex items-start space-x-2">
                   <span className="text-chart-1 mt-0.5 flex-shrink-0">❓</span>
-                  <div className="text-xs space-y-1">
+                  <div className="text-xs sm:text-xs space-y-1">
                     <p className="font-medium text-chart-1">Primeira vez no sistema?</p>
-                    <p className="text-muted-foreground">
+                    <p className="text-muted-foreground leading-relaxed">
                       Digite seu email cadastrado pelo administrador. Se for seu primeiro acesso, você será direcionado
                       para criar sua senha automaticamente.
                     </p>
@@ -188,9 +188,9 @@ export function LoginForm() {
                 </div>
               </div>
 
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground text-center mb-2">Credenciais de demonstração:</p>
-                <div className="text-xs space-y-1">
+              <div className="p-3 sm:p-4 bg-muted rounded-lg">
+                <p className="text-xs sm:text-sm text-muted-foreground text-center mb-2">Credenciais de demonstração:</p>
+                <div className="text-xs space-y-1 text-center sm:text-left">
                   <p>
                     <strong>Admin:</strong> admin@empresa.com
                   </p>

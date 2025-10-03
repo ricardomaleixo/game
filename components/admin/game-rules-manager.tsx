@@ -199,67 +199,75 @@ export function GameRulesManager() {
             </Dialog>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-2 sm:p-6">
           {rules.length === 0 ? (
             <div className="text-center py-8">
-              <Settings className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhuma regra configurada ainda</p>
-              <p className="text-sm text-muted-foreground">Crie regras para definir a pontuação dos produtos</p>
+              <Settings className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground text-sm sm:text-base">Nenhuma regra configurada ainda</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Crie regras para definir a pontuação dos produtos</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Produto/Serviço</TableHead>
-                  <TableHead>Pontos</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rules.map((rule) => (
-                  <TableRow key={rule.id}>
-                    <TableCell className="flex items-center space-x-2">
-                      <Package className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{rule.productName}</span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Star className="h-4 w-4 text-chart-1" />
-                        <span className="font-semibold">{rule.points} pts</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={rule.isActive ? "default" : "secondary"}>
-                        {rule.isActive ? "Ativa" : "Inativa"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(rule)}
-                          className="flex items-center space-x-1"
-                        >
-                          <Edit className="h-3 w-3" />
-                          <span>Editar</span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(rule.id)}
-                          className="flex items-center space-x-1 text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                          <span>Excluir</span>
-                        </Button>
-                      </div>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table className="min-w-full">
+                <TableHeader className="hidden sm:table-header-group">
+                  <TableRow>
+                    <TableHead>Produto/Serviço</TableHead>
+                    <TableHead>Pontos</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {rules.map((rule) => (
+                    <TableRow key={rule.id} className="block sm:table-row border-b sm:border-b-0 p-3 sm:p-0 mb-3 sm:mb-0 bg-card rounded-lg sm:bg-transparent sm:rounded-none">
+                      <TableCell className="block sm:table-cell sm:flex sm:items-center sm:space-x-2">
+                        <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Produto/Serviço:</span>
+                        <div className="flex items-center space-x-2">
+                          <Package className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{rule.productName}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="block sm:table-cell">
+                        <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Pontos:</span>
+                        <div className="flex items-center space-x-2">
+                          <Star className="h-4 w-4 text-chart-1" />
+                          <span className="font-semibold">{rule.points} pts</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="block sm:table-cell">
+                        <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Status:</span>
+                        <Badge variant={rule.isActive ? "default" : "secondary"}>
+                          {rule.isActive ? "Ativa" : "Inativa"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="block sm:table-cell sm:text-right">
+                        <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Ações:</span>
+                        <div className="flex items-center sm:justify-end space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(rule)}
+                            className="flex items-center space-x-1 flex-1 sm:flex-none"
+                          >
+                            <Edit className="h-3 w-3" />
+                            <span>Editar</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(rule.id)}
+                            className="flex items-center space-x-1 text-destructive hover:text-destructive flex-1 sm:flex-none"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            <span>Excluir</span>
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

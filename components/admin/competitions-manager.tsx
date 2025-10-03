@@ -339,62 +339,80 @@ export function CompetitionsManager() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-2 sm:p-6">
           {isLoading ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">Carregando...</p>
             </div>
           ) : competitions.length === 0 ? (
             <div className="text-center py-8">
-              <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhuma gincana criada ainda</p>
-              <p className="text-sm text-muted-foreground">Crie uma gincana para começar a competição</p>
+              <Target className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground text-sm sm:text-base">Nenhuma gincana criada ainda</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Crie uma gincana para começar a competição</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Período</TableHead>
-                  <TableHead>Participantes</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {competitions.map((competition) => {
-                  const typeInfo = getCompetitionTypeInfo(competition.type)
-                  const Icon = typeInfo?.icon || Target
-                  return (
-                    <TableRow key={competition.id}>
-                      <TableCell className="font-medium">{competition.name}</TableCell>
-                      <TableCell>{typeInfo?.label}</TableCell>
-                      <TableCell>
-                        {new Date(competition.startDate).toLocaleDateString("pt-BR")} -{" "}
-                        {new Date(competition.endDate).toLocaleDateString("pt-BR")}
-                      </TableCell>
-                      <TableCell>{competition.participants.length}</TableCell>
-                      <TableCell>
-                        <Badge variant={competition.isActive ? "default" : "secondary"}>
-                          {competition.isActive ? "Ativa" : "Inativa"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm" onClick={() => handleEdit(competition)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => handleDelete(competition.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <Table className="min-w-full">
+                <TableHeader className="hidden sm:table-header-group">
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Período</TableHead>
+                    <TableHead>Participantes</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {competitions.map((competition) => {
+                    const typeInfo = getCompetitionTypeInfo(competition.type)
+                    const Icon = typeInfo?.icon || Target
+                    return (
+                      <TableRow key={competition.id} className="block sm:table-row border-b sm:border-b-0 p-3 sm:p-0 mb-3 sm:mb-0 bg-card rounded-lg sm:bg-transparent sm:rounded-none">
+                        <TableCell className="block sm:table-cell font-medium">
+                          <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Nome:</span>
+                          {competition.name}
+                        </TableCell>
+                        <TableCell className="block sm:table-cell">
+                          <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Tipo:</span>
+                          {typeInfo?.label}
+                        </TableCell>
+                        <TableCell className="block sm:table-cell">
+                          <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Período:</span>
+                          <span className="text-sm">
+                            {new Date(competition.startDate).toLocaleDateString("pt-BR")} -{" "}
+                            {new Date(competition.endDate).toLocaleDateString("pt-BR")}
+                          </span>
+                        </TableCell>
+                        <TableCell className="block sm:table-cell">
+                          <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Participantes:</span>
+                          {competition.participants.length}
+                        </TableCell>
+                        <TableCell className="block sm:table-cell">
+                          <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Status:</span>
+                          <Badge variant={competition.isActive ? "default" : "secondary"}>
+                            {competition.isActive ? "Ativa" : "Inativa"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="block sm:table-cell">
+                          <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Ações:</span>
+                          <div className="flex space-x-2">
+                            <Button variant="outline" size="sm" onClick={() => handleEdit(competition)} className="flex-1 sm:flex-none">
+                              <Edit className="h-4 w-4" />
+                              <span className="sm:hidden ml-1">Editar</span>
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => handleDelete(competition.id)} className="flex-1 sm:flex-none">
+                              <Trash2 className="h-4 w-4" />
+                              <span className="sm:hidden ml-1">Excluir</span>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
