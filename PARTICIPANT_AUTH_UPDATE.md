@@ -44,15 +44,15 @@
 ## Para Aplicar as Mudanças
 
 Execute o script de migração:
-```bash
+\`\`\`bash
 node scripts/migrate-password.js
-```
+\`\`\`
 
 Ou manualmente:
-```bash
+\`\`\`bash
 npx prisma generate
 npx prisma migrate dev --name add_participant_password
-```
+\`\`\`
 
 ## Testando
 

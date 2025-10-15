@@ -1,15 +1,23 @@
 "use client"
 
 import { useAuth } from "@/hooks/use-auth-prisma"
-import { LoginForm } from "@/components/login-form"
 import { AdminDashboard } from "@/components/admin-dashboard"
 import { ParticipantDashboard } from "@/components/participant-dashboard"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 export default function HomePage() {
   const { isAuthenticated, user } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/landing")
+    }
+  }, [isAuthenticated, router])
 
   if (!isAuthenticated) {
-    return <LoginForm />
+    return null
   }
 
   if (user?.role === "admin") {

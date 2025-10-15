@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { setParticipantPassword } from "@/app/actions/auth-actions"
+import { setParticipantPassword, setAdminPassword } from "@/app/actions/auth-actions"
 import { useAuth } from "@/hooks/use-auth-prisma"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -40,8 +40,12 @@ export function PasswordSetup({ user, onPasswordSet }: PasswordSetupProps) {
     }
 
     try {
-      // Definir senha
-      const result = await setParticipantPassword(user.id, password)
+      let result
+      if (user.role === "admin") {
+        result = await setAdminPassword(user.email, password)
+      } else {
+        result = await setParticipantPassword(user.id, password)
+      }
 
       if (result.success) {
         // Fazer login automático com a nova senha
@@ -52,7 +56,7 @@ export function PasswordSetup({ user, onPasswordSet }: PasswordSetupProps) {
           setError("Senha configurada, mas erro no login automático. Tente fazer login novamente.")
         }
       } else {
-        setError(result.message || "Erro ao definir senha. Tente novamente.")
+        setError(result.message || result.error || "Erro ao definir senha. Tente novamente.")
       }
     } catch (error) {
       console.error("Erro ao configurar senha:", error)

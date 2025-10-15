@@ -23,7 +23,7 @@ O projeto foi migrado do **localStorage** para **Prisma + PostgreSQL**, oferecen
 ## 🚀 Como Usar o Novo Sistema
 
 ### 1. **Configurar Banco de Dados**
-```bash
+\`\`\`bash
 # Gerar cliente Prisma
 npm run db:generate
 
@@ -32,29 +32,29 @@ npm run db:migrate
 
 # (Opcional) Abrir Prisma Studio
 npm run db:studio
-```
+\`\`\`
 
 ### 2. **Executar Migração de Dados**
-```bash
+\`\`\`bash
 # Migração básica
 npx tsx scripts/migrate-localStorage-to-prisma.ts
 
 # Migração com dados de exemplo
 npx tsx scripts/migrate-localStorage-to-prisma.ts --seed
-```
+\`\`\`
 
 ### 3. **Atualizar Autenticação nos Componentes**
 
 #### ❌ Antes (localStorage):
-```tsx
+\`\`\`tsx
 import { useAuth } from "@/hooks/use-auth"
 
 const { user, login, logout } = useAuth()
 const success = login(email, password) // retorna boolean
-```
+\`\`\`
 
 #### ✅ Depois (Prisma):
-```tsx
+\`\`\`tsx
 import { useAuth } from "@/hooks/use-auth-prisma" 
 
 const { user, login, logout } = useAuth()
@@ -62,20 +62,20 @@ const result = await login(email, password) // retorna Promise<{success, error?}
 if (result.success) {
   // Login realizado com sucesso
 }
-```
+\`\`\`
 
 ### 4. **Usar Server Actions para Dados**
 
 #### ❌ Antes (localStorage direto):
-```tsx
+\`\`\`tsx
 import { database } from "@/lib/database"
 
 // Cliente-side com localStorage
 const participants = await database.getParticipants()
-```
+\`\`\`
 
 #### ✅ Depois (Server Actions):
-```tsx
+\`\`\`tsx
 import { getParticipants, saveParticipant } from "@/app/actions/database-actions"
 
 // Server actions
@@ -85,7 +85,7 @@ const newParticipant = await saveParticipant({
   email: "joao@email.com", 
   position: "Vendedor"
 })
-```
+\`\`\`
 
 ## 🔐 Novo Sistema de Autenticação
 
@@ -103,7 +103,7 @@ const newParticipant = await saveParticipant({
 ## 📊 CRUD Operations Disponíveis
 
 ### Participants
-```tsx
+\`\`\`tsx
 import { 
   getParticipants, 
   saveParticipant, 
@@ -126,10 +126,10 @@ await updateParticipant(id, { points: 1500 })
 
 // Deletar  
 await deleteParticipant(id)
-```
+\`\`\`
 
 ### Sales
-```tsx
+\`\`\`tsx
 import { getSales, saveSale, updateSale, deleteSale } from "@/app/actions/database-actions"
 
 const newSale = await saveSale({
@@ -139,10 +139,10 @@ const newSale = await saveSale({
   date: new Date().toISOString(),
   type: "sale"
 })
-```
+\`\`\`
 
 ### Game Rules
-```tsx
+\`\`\`tsx
 import { getGameRules, saveGameRule, updateGameRule, deleteGameRule } from "@/app/actions/database-actions"
 
 const newRule = await saveGameRule({
@@ -150,17 +150,17 @@ const newRule = await saveGameRule({
   points: 200,
   isActive: true
 })
-```
+\`\`\`
 
 ### Competitions & Achievements
-```tsx
+\`\`\`tsx
 import { 
   getCompetitions, 
   saveCompetition,
   getAchievements,
   saveAchievement 
 } from "@/app/actions/database-actions"
-```
+\`\`\`
 
 ## 🔄 Processo de Migração de Componentes
 
@@ -199,25 +199,25 @@ import {
 ## 🆘 Troubleshooting
 
 ### Erro de Conexão com Banco
-```bash
+\`\`\`bash
 # Verificar variáveis de ambiente
 cat .env.local
 
 # Verificar conexão
 npx prisma db push
-```
+\`\`\`
 
 ### Problemas de Autenticação
-```bash
+\`\`\`bash
 # Resetar admin padrão
 npx tsx scripts/migrate-localStorage-to-prisma.ts
-```
+\`\`\`
 
 ### Dados não Aparecem
-```bash
+\`\`\`bash
 # Verificar no Prisma Studio
 npm run db:studio
-```
+\`\`\`
 
 ## 📈 Próximos Passos
 

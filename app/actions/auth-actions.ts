@@ -33,46 +33,46 @@ async function verifyPassword(password: string, hashedPassword: string): Promise
 export async function getCurrentUser(): Promise<AuthUser | null> {
   const cookieStore = cookies()
   const sessionCookie = cookieStore.get("session")
-  
+
   if (!sessionCookie) {
     return null
   }
 
   try {
     const sessionData = JSON.parse(sessionCookie.value)
-    
+
     // Buscar dados atualizados do usuário no banco
-    if (sessionData.role === 'admin') {
+    if (sessionData.role === "admin") {
       const admin = await prisma.admin.findUnique({
         where: { id: sessionData.id },
       })
-      
+
       if (!admin) return null
-      
+
       return {
         id: admin.id,
         name: admin.name,
         email: admin.email,
-        role: 'admin',
+        role: "admin",
         createdAt: admin.createdAt.toISOString(),
       }
-    } else if (sessionData.role === 'participant') {
+    } else if (sessionData.role === "participant") {
       const participant = await prisma.participant.findUnique({
         where: { id: sessionData.id },
       })
-      
+
       if (!participant) return null
-      
+
       return {
         id: participant.id,
         name: participant.name,
         email: participant.email,
-        role: 'participant',
+        role: "participant",
         createdAt: participant.createdAt.toISOString(),
         adminId: participant.adminId,
       }
     }
-    
+
     return null
   } catch {
     return null
@@ -85,25 +85,35 @@ export async function loginUser(email: string, password: string) {
     // Verificar se é admin
     const admin = await prisma.admin.findUnique({
       where: { email },
-    });
+    })
 
     if (admin) {
-      const isValidPassword = await bcrypt.compare(password, admin.password);
+      if (!admin.password || admin.password === "") {
+        return {
+          success: false,
+          needsPasswordSetup: true,
+          userId: admin.id,
+          userEmail: admin.email,
+          message: "Primeiro acesso - defina sua senha",
+        }
+      }
+
+      const isValidPassword = await bcrypt.compare(password, admin.password)
       if (isValidPassword) {
         // Definir cookie de sessão
         cookies().set({
-          name: 'session',
+          name: "session",
           value: JSON.stringify({
             id: admin.id,
             email: admin.email,
             name: admin.name,
-            role: 'admin'
+            role: "admin",
           }),
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
           maxAge: 60 * 60 * 24 * 7, // 7 dias
-        });
+        })
 
         return {
           success: true,
@@ -111,18 +121,18 @@ export async function loginUser(email: string, password: string) {
             id: admin.id,
             name: admin.name,
             email: admin.email,
-            role: 'admin' as const,
+            role: "admin" as const,
             createdAt: admin.createdAt.toISOString(),
           },
-        };
+        }
       }
     }
 
     // Verificar se é participante
     const participant = await prisma.participant.findFirst({
       where: { email },
-      include: { admin: true }
-    });
+      include: { admin: true },
+    })
 
     if (participant) {
       // Se participante não tem senha, precisa definir uma
@@ -131,27 +141,27 @@ export async function loginUser(email: string, password: string) {
           success: false,
           needsPasswordSetup: true,
           participantId: participant.id,
-          message: 'Primeiro acesso - defina sua senha'
-        };
+          message: "Primeiro acesso - defina sua senha",
+        }
       }
 
-      const isValidPassword = await bcrypt.compare(password, participant.password);
+      const isValidPassword = await bcrypt.compare(password, participant.password)
       if (isValidPassword) {
         // Definir cookie de sessão
         cookies().set({
-          name: 'session',
+          name: "session",
           value: JSON.stringify({
             id: participant.id,
             email: participant.email,
             name: participant.name,
-            role: 'participant',
-            adminId: participant.adminId
+            role: "participant",
+            adminId: participant.adminId,
           }),
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
           maxAge: 60 * 60 * 24 * 7, // 7 dias
-        });
+        })
 
         return {
           success: true,
@@ -159,18 +169,18 @@ export async function loginUser(email: string, password: string) {
             id: participant.id,
             name: participant.name,
             email: participant.email,
-            role: 'participant' as const,
+            role: "participant" as const,
             createdAt: participant.createdAt.toISOString(),
             adminId: participant.adminId,
           },
-        };
+        }
       }
     }
 
-    return { success: false, message: 'Credenciais inválidas' };
+    return { success: false, message: "Credenciais inválidas" }
   } catch (error) {
-    console.error('Erro no login:', error);
-    return { success: false, message: 'Erro interno do servidor' };
+    console.error("Erro no login:", error)
+    return { success: false, message: "Erro interno do servidor" }
   }
 }
 
@@ -181,11 +191,15 @@ export async function logoutUser(): Promise<void> {
 }
 
 // Função para registrar admin
-export async function registerAdmin(name: string, email: string, password: string): Promise<{ success: boolean; user?: AuthUser; error?: string }> {
+export async function registerAdmin(
+  name: string,
+  email: string,
+  password: string,
+): Promise<{ success: boolean; user?: AuthUser; error?: string }> {
   try {
     // Verificar se já existe admin com este email
     const existingAdmin = await prisma.admin.findUnique({
-      where: { email }
+      where: { email },
     })
 
     if (existingAdmin) {
@@ -198,8 +212,8 @@ export async function registerAdmin(name: string, email: string, password: strin
       data: {
         name,
         email,
-        password: hashedPassword
-      }
+        password: hashedPassword,
+      },
     })
 
     const user: AuthUser = {
@@ -207,7 +221,7 @@ export async function registerAdmin(name: string, email: string, password: strin
       name: admin.name,
       email: admin.email,
       role: "admin",
-      createdAt: admin.createdAt.toISOString()
+      createdAt: admin.createdAt.toISOString(),
     }
 
     return { success: true, user }
@@ -218,7 +232,10 @@ export async function registerAdmin(name: string, email: string, password: strin
 }
 
 // Função para alterar senha do usuário atual
-export async function changePassword(currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<{ success: boolean; error?: string }> {
   try {
     const user = await getCurrentUser()
     if (!user) {
@@ -227,7 +244,7 @@ export async function changePassword(currentPassword: string, newPassword: strin
 
     if (user.role === "admin") {
       const admin = await prisma.admin.findUnique({
-        where: { id: user.id }
+        where: { id: user.id },
       })
 
       if (!admin) {
@@ -243,7 +260,7 @@ export async function changePassword(currentPassword: string, newPassword: strin
 
       await prisma.admin.update({
         where: { id: user.id },
-        data: { password: hashedNewPassword }
+        data: { password: hashedNewPassword },
       })
 
       return { success: true }
@@ -262,16 +279,20 @@ export async function getAuthState(): Promise<AuthState> {
   const user = await getCurrentUser()
   return {
     user,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
   }
 }
 
 // Função para registrar participante
-export async function registerParticipant(name: string, email: string, position: string): Promise<{ success: boolean; user?: AuthUser; error?: string }> {
+export async function registerParticipant(
+  name: string,
+  email: string,
+  position: string,
+): Promise<{ success: boolean; user?: AuthUser; error?: string }> {
   try {
     // Verificar se já existe participante com este email
     const existingParticipants = await prisma.participant.findMany({
-      where: { email }
+      where: { email },
     })
 
     if (existingParticipants.length > 0) {
@@ -290,8 +311,8 @@ export async function registerParticipant(name: string, email: string, position:
         email,
         position,
         points: 0,
-        adminId: currentUser.id
-      }
+        adminId: currentUser.id,
+      },
     })
 
     const user: AuthUser = {
@@ -300,7 +321,7 @@ export async function registerParticipant(name: string, email: string, position:
       email: participant.email,
       role: "participant",
       createdAt: participant.createdAt.toISOString(),
-      needsPasswordSetup: true
+      needsPasswordSetup: true,
     }
 
     return { success: true, user }
@@ -310,16 +331,14 @@ export async function registerParticipant(name: string, email: string, position:
   }
 }
 
-
-
 // Função para verificar se participante precisa configurar senha
 export async function participantNeedsPasswordSetup(email: string): Promise<boolean> {
   try {
     // Verificar se existe participante com este email que não tem senha configurada
     const participants = await prisma.participant.findMany({
-      where: { email }
+      where: { email },
     })
-    
+
     // Se encontrou participante, verificar se tem senha no sistema
     // Por agora, vamos assumir que participantes sempre precisam configurar senha no primeiro login
     return participants.length > 0
@@ -330,11 +349,13 @@ export async function participantNeedsPasswordSetup(email: string): Promise<bool
 }
 
 // Função para encontrar usuário por email (admin ou participante)
-export async function findUserByEmail(email: string): Promise<{ success: boolean; user?: AuthUser; needsPasswordSetup?: boolean; error?: string }> {
+export async function findUserByEmail(
+  email: string,
+): Promise<{ success: boolean; user?: AuthUser; needsPasswordSetup?: boolean; error?: string }> {
   try {
     // Primeiro, procurar por admin
     const admin = await prisma.admin.findUnique({
-      where: { email }
+      where: { email },
     })
 
     if (admin) {
@@ -345,15 +366,15 @@ export async function findUserByEmail(email: string): Promise<{ success: boolean
           name: admin.name,
           email: admin.email,
           role: "admin",
-          createdAt: admin.createdAt.toISOString()
+          createdAt: admin.createdAt.toISOString(),
         },
-        needsPasswordSetup: false
+        needsPasswordSetup: !admin.password, // Precisa configurar senha se não tem password
       }
     }
 
     // Se não encontrou admin, procurar por participante
     const participants = await prisma.participant.findMany({
-      where: { email }
+      where: { email },
     })
 
     if (participants.length > 0) {
@@ -365,9 +386,9 @@ export async function findUserByEmail(email: string): Promise<{ success: boolean
           name: participant.name,
           email: participant.email,
           role: "participant",
-          createdAt: participant.createdAt.toISOString()
+          createdAt: participant.createdAt.toISOString(),
         },
-        needsPasswordSetup: !participant.password // Precisa configurar senha se não tem password
+        needsPasswordSetup: !participant.password, // Precisa configurar senha se não tem password
       }
     }
 
@@ -381,17 +402,17 @@ export async function findUserByEmail(email: string): Promise<{ success: boolean
 // Função para configurar senha de participante
 export async function setParticipantPassword(participantId: string, password: string) {
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
+    const hashedPassword = await bcrypt.hash(password, 10)
+
     await prisma.participant.update({
       where: { id: participantId },
-      data: { password: hashedPassword }
-    });
-    
-    return { success: true, message: "Senha definida com sucesso" };
+      data: { password: hashedPassword },
+    })
+
+    return { success: true, message: "Senha definida com sucesso" }
   } catch (error) {
-    console.error("Erro ao definir senha do participante:", error);
-    return { success: false, message: "Erro ao definir senha auth actions" };
+    console.error("Erro ao definir senha do participante:", error)
+    return { success: false, message: "Erro ao definir senha auth actions" }
   }
 }
 
@@ -407,5 +428,68 @@ export async function syncParticipantsAsUsers(): Promise<void> {
     // Por agora, os participantes são criados diretamente no banco
   } catch (error) {
     console.error("Erro ao sincronizar participantes:", error)
+  }
+}
+
+// Função para registrar admin após pagamento
+export async function registerAdminAfterPayment(data: {
+  name: string
+  email: string
+  cpfCnpj: string
+  phone: string
+  sessionId: string
+}): Promise<{ success: boolean; user?: AuthUser; error?: string }> {
+  try {
+    // Verificar se já existe admin com este email
+    const existingAdmin = await prisma.admin.findUnique({
+      where: { email: data.email },
+    })
+
+    if (existingAdmin) {
+      return { success: false, error: "Email já está em uso" }
+    }
+
+    // Criar admin sem senha (será definida no primeiro acesso)
+    const admin = await prisma.admin.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        password: "", // Senha vazia - será definida no primeiro acesso
+        cpfCnpj: data.cpfCnpj,
+        phone: data.phone,
+        stripeSessionId: data.sessionId,
+      },
+    })
+
+    const user: AuthUser = {
+      id: admin.id,
+      name: admin.name,
+      email: admin.email,
+      role: "admin",
+      createdAt: admin.createdAt.toISOString(),
+      needsPasswordSetup: true,
+    }
+
+    return { success: true, user }
+  } catch (error) {
+    console.error("Erro no registro após pagamento:", error)
+    return { success: false, error: "Erro interno do servidor" }
+  }
+}
+
+// Função para configurar senha de admin
+export async function setAdminPassword(email: string, password: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const hashedPassword = await hashPassword(password)
+
+    await prisma.admin.update({
+      where: { email },
+      data: { password: hashedPassword },
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error("Erro ao definir senha do admin:", error)
+    return { success: false, error: "Erro ao definir senha" }
   }
 }
