@@ -6,13 +6,12 @@ import { getMyCompetitions, getMyParticipantData } from "@/app/actions/database-
 import type { Competition, Participant } from "@/lib/database"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TowerGame } from "@/components/games/tower-game"
 import { RaceGame } from "@/components/games/race-game"
 import { TreasureGame } from "@/components/games/treasure-game"
 import { MedalsGame } from "@/components/games/medals-game"
 import { MissionsGame } from "@/components/games/missions-game"
-import { Gamepad2, Target, Clock, Trophy } from "lucide-react"
+import { Gamepad2, Target, Clock } from "lucide-react"
 
 export function GameVisualization() {
   const { user } = useAuth()
@@ -36,6 +35,7 @@ export function GameVisualization() {
       const now = new Date()
 
       const currentActiveCompetition = allCompetitions.find((c) => {
+       
         if (!c.isActive) {
           return false
         }
@@ -43,7 +43,7 @@ export function GameVisualization() {
         // Converter strings de data para objetos Date, ignorando horário
         const startDate = new Date(c.startDate)
         const endDate = new Date(c.endDate)
-
+        
         // Normalizar as datas para meia-noite para comparação apenas da data
         const currentDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
         const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
@@ -58,6 +58,19 @@ export function GameVisualization() {
       })
 
       setActiveCompetition(currentActiveCompetition || null)
+
+      // Se não encontrou competição ativa, vamos mostrar mais detalhes
+      if (!currentActiveCompetition && allCompetitions.length > 0) {
+        allCompetitions.forEach((comp, index) => {
+          console.log(`[GameVisualization] Competição ${index + 1}:`, {
+            name: comp.name,
+            isActive: comp.isActive,
+            startDate: comp.startDate,
+            endDate: comp.endDate,
+            type: comp.type
+          })
+        })
+      }
 
       const currentParticipant = await getMyParticipantData()
 
@@ -94,31 +107,6 @@ export function GameVisualization() {
     }
   }
 
-  const renderCompetitionCard = (competition: Competition, isActive = false) => {
-    return (
-      <Card key={competition.id} className="mb-4">
-        <CardHeader className="p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-            <CardTitle className="text-base sm:text-lg">{competition.name}</CardTitle>
-            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
-              <Badge variant={isActive ? "default" : "secondary"} className={isActive ? "bg-green-500 w-fit" : "w-fit"}>
-                {isActive ? "Ativa" : "Inativa"}
-              </Badge>
-              <div className="flex items-center space-x-1 text-xs sm:text-sm text-muted-foreground">
-                <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="text-xs sm:text-sm">
-                  {new Date(competition.startDate).toLocaleDateString("pt-BR")} -{" "}
-                  {new Date(competition.endDate).toLocaleDateString("pt-BR")}
-                </span>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-4 sm:p-6">{renderGameComponent(competition)}</CardContent>
-      </Card>
-    )
-  }
-
   if (isLoading) {
     return (
       <div className="text-center py-8">
@@ -138,77 +126,43 @@ export function GameVisualization() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <Tabs defaultValue="active" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="active" className="flex items-center space-x-2">
-            <Gamepad2 className="h-4 w-4" />
+      <Card>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+            <Gamepad2 className="h-4 w-4 sm:h-5 sm:w-5" />
             <span>Gincana Ativa</span>
-          </TabsTrigger>
-          <TabsTrigger value="all" className="flex items-center space-x-2">
-            <Trophy className="h-4 w-4" />
-            <span>Todas ({allCompetitions.length})</span>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="active" className="mt-4">
-          <Card>
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
-                <Gamepad2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span>Gincana Ativa</span>
-              </CardTitle>
-              <CardDescription className="text-sm">Participe da competição atual e ganhe pontos extras</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4 sm:p-6">
-              {!activeCompetition ? (
-                <div className="text-center py-6 sm:py-8">
-                  <Target className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground text-sm sm:text-base">Nenhuma gincana ativa no momento</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Aguarde novas competições serem criadas</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                    <h3 className="font-semibold text-base sm:text-lg">{activeCompetition.name}</h3>
-                    <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
-                      <Badge variant="default" className="bg-green-500 w-fit">
-                        Ativa
-                      </Badge>
-                      <div className="flex items-center space-x-1 text-xs sm:text-sm text-muted-foreground">
-                        <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
-                        <span className="text-xs sm:text-sm">
-                          {new Date(activeCompetition.startDate).toLocaleDateString("pt-BR")} -{" "}
-                          {new Date(activeCompetition.endDate).toLocaleDateString("pt-BR")}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  {renderGameComponent(activeCompetition)}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="all" className="mt-4">
-          {allCompetitions.length === 0 ? (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Nenhuma gincana cadastrada</p>
-                <p className="text-sm text-muted-foreground mt-2">Aguarde o administrador criar competições</p>
-              </CardContent>
-            </Card>
+          </CardTitle>
+          <CardDescription className="text-sm">Participe da competição atual e ganhe pontos extras</CardDescription>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-6">
+          {!activeCompetition ? (
+            <div className="text-center py-6 sm:py-8">
+              <Target className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground text-sm sm:text-base">Nenhuma gincana ativa no momento</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Aguarde novas competições serem criadas</p>
+            </div>
           ) : (
             <div className="space-y-4">
-              {allCompetitions.map((competition) => {
-                const isActive = activeCompetition?.id === competition.id
-                return renderCompetitionCard(competition, isActive)
-              })}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                <h3 className="font-semibold text-base sm:text-lg">{activeCompetition.name}</h3>
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                  <Badge variant="default" className="bg-green-500 w-fit">
+                    Ativa
+                  </Badge>
+                  <div className="flex items-center space-x-1 text-xs sm:text-sm text-muted-foreground">
+                    <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="text-xs sm:text-sm">
+                      {new Date(activeCompetition.startDate).toLocaleDateString("pt-BR")} -{" "}
+                      {new Date(activeCompetition.endDate).toLocaleDateString("pt-BR")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              {renderGameComponent(activeCompetition)}
             </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </div>
   )
 }

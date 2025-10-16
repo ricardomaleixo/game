@@ -3,22 +3,7 @@
 import { getCurrentUser } from "./auth-actions"
 import prisma from "@/lib/prisma"
 import type { Participant, Competition, GameRule, Sale, Achievement, Prisma } from "@prisma/client"
-import type { 
-  FormattedParticipant, 
-  FormattedCompetition, 
-  FormattedGameRule, 
-  FormattedSale, 
-  FormattedAchievement,
-  CreateParticipant,
-  CreateCompetition,
-  CreateGameRule,
-  CreateSale,
-  CreateAchievement,
-  UpdateParticipant,
-  UpdateCompetition,
-  UpdateSale,
-  UpdateGameRule
-} from "@/types"
+import type { FormattedParticipant, CreateParticipant, UpdateParticipant } from "@/types"
 
 async function getCurrentAdminId(): Promise<string | null> {
   const user = await getCurrentUser()
@@ -39,15 +24,15 @@ async function getCurrentParticipantId(): Promise<string | null> {
 async function getCurrentParticipantData(): Promise<{ id: string; adminId: string } | null> {
   const user = await getCurrentUser()
   console.log("[getCurrentParticipantData] Usuário atual:", user)
-  
+
   if (!user || user.role !== "participant") {
     console.log("[getCurrentParticipantData] Usuário não é participante ou não existe")
     return null
   }
-  
+
   const result = { id: user.id, adminId: user.adminId! }
   console.log("[getCurrentParticipantData] Retornando dados:", result)
-  
+
   return result
 }
 
@@ -57,12 +42,12 @@ export async function getParticipants(): Promise<FormattedParticipant[]> {
     if (!adminId) {
       return []
     }
-    
+
     const participants = await prisma.participant.findMany({
       where: { adminId },
       orderBy: { points: "desc" },
     })
-    
+
     return participants.map((p: Participant) => ({
       id: p.id,
       name: p.name,
@@ -89,8 +74,8 @@ export async function createParticipant(participant: CreateParticipant): Promise
     const existingParticipant = await prisma.participant.findFirst({
       where: {
         email: participant.email,
-        adminId
-      }
+        adminId,
+      },
     })
 
     if (existingParticipant) {
@@ -118,12 +103,12 @@ export async function createParticipant(participant: CreateParticipant): Promise
     }
   } catch (error) {
     console.error("Error saving participant:", error)
-    
+
     // Verificar se é erro de constraint única
     if (error instanceof Error && error.message.includes("Unique constraint failed")) {
       throw new Error(`Já existe um participante com o email ${participant.email}`)
     }
-    
+
     throw error
   }
 }
@@ -192,8 +177,9 @@ export async function saveCompetition(competition: {
   name: string
   type: "tower" | "race" | "treasure" | "medals" | "missions"
   startDate: string
-  endDate: string,
+  endDate: string
   participants: string[]
+  isActive?: boolean
 }) {
   try {
     const adminId = await getCurrentAdminId()
@@ -207,7 +193,7 @@ export async function saveCompetition(competition: {
         type: competition.type,
         startDate: new Date(competition.startDate),
         endDate: new Date(competition.endDate),
-        isActive: true,
+        isActive: competition.isActive ?? true,
         rules: {},
         participants: [],
         adminId,
@@ -231,15 +217,18 @@ export async function saveCompetition(competition: {
   }
 }
 
-export async function updateCompetition(id: string, updates: {
-  name?: string
-  type?: "tower" | "race" | "treasure" | "medals" | "missions"
-  startDate?: string
-  endDate?: string
-  isActive?: boolean
-  rules?: any
-  participants?: string[]
-}) {
+export async function updateCompetition(
+  id: string,
+  updates: {
+    name?: string
+    type?: "tower" | "race" | "treasure" | "medals" | "missions"
+    startDate?: string
+    endDate?: string
+    isActive?: boolean
+    rules?: any
+    participants?: string[]
+  },
+) {
   try {
     const adminId = await getCurrentAdminId()
     if (!adminId) {
@@ -298,7 +287,7 @@ export async function getGameRules() {
   }
 }
 
-export async function saveGameRule(rule: { productName: string; points: number, isActive: boolean }) {
+export async function saveGameRule(rule: { productName: string; points: number; isActive: boolean }) {
   try {
     const adminId = await getCurrentAdminId()
     if (!adminId) {
@@ -327,7 +316,10 @@ export async function saveGameRule(rule: { productName: string; points: number, 
   }
 }
 
-export async function updateGameRule(id: string, updates: { productName?: string; points?: number; isActive?: boolean }) {
+export async function updateGameRule(
+  id: string,
+  updates: { productName?: string; points?: number; isActive?: boolean },
+) {
   try {
     const adminId = await getCurrentAdminId()
     if (!adminId) {
@@ -385,7 +377,13 @@ export async function getSales() {
   }
 }
 
-export async function saveSale(sale: { participantId: string; productName: string; points: number; date: string; type: "sale" | "rental" }) {
+export async function saveSale(sale: {
+  participantId: string
+  productName: string
+  points: number
+  date: string
+  type: "sale" | "rental"
+}) {
   try {
     const adminId = await getCurrentAdminId()
     if (!adminId) {
@@ -434,13 +432,16 @@ export async function saveSale(sale: { participantId: string; productName: strin
   }
 }
 
-export async function updateSale(id: string, updates: { participantId?: string; productName?: string; points?: number; date?: string; type?: "sale" | "rental" }) {
+export async function updateSale(
+  id: string,
+  updates: { participantId?: string; productName?: string; points?: number; date?: string; type?: "sale" | "rental" },
+) {
   try {
     const adminId = await getCurrentAdminId()
     if (!adminId) {
       throw new Error("Admin não autenticado")
     }
-    
+
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Buscar venda atual
       const currentSale = await tx.sale.findFirst({
@@ -498,7 +499,7 @@ export async function deleteSale(id: string) {
     if (!adminId) {
       throw new Error("Admin não autenticado")
     }
-    
+
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Buscar venda para remover pontos
       const sale = await tx.sale.findFirst({
@@ -699,7 +700,7 @@ export async function getMyCompetitions() {
   try {
     const participantData = await getCurrentParticipantData()
     console.log("[getMyCompetitions] Dados do participante:", participantData)
-    
+
     if (!participantData) {
       console.log("[getMyCompetitions] Nenhum dado de participante encontrado")
       return []
@@ -738,9 +739,9 @@ export async function getMySales() {
     }
 
     const sales = await prisma.sale.findMany({
-      where: { 
+      where: {
         participantId: participantData.id,
-        adminId: participantData.adminId 
+        adminId: participantData.adminId,
       },
       orderBy: { date: "desc" },
     })
@@ -769,9 +770,9 @@ export async function getMyAchievements() {
     }
 
     const achievements = await prisma.achievement.findMany({
-      where: { 
+      where: {
         participantId: participantData.id,
-        adminId: participantData.adminId 
+        adminId: participantData.adminId,
       },
       orderBy: { date: "desc" },
     })

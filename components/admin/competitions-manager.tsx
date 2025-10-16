@@ -56,6 +56,7 @@ export function CompetitionsManager() {
     startDate: "",
     endDate: "",
     selectedParticipants: [] as string[],
+    isActive: true,
   })
 
   useEffect(() => {
@@ -87,6 +88,7 @@ export function CompetitionsManager() {
           startDate: formData.startDate,
           endDate: formData.endDate,
           participants: formData.selectedParticipants,
+          isActive: formData.isActive,
         })
         setIsEditDialogOpen(false)
         setEditingCompetition(null)
@@ -97,6 +99,7 @@ export function CompetitionsManager() {
           startDate: formData.startDate,
           endDate: formData.endDate,
           participants: formData.selectedParticipants,
+          isActive: formData.isActive,
         })
         setIsDialogOpen(false)
       }
@@ -107,6 +110,7 @@ export function CompetitionsManager() {
         startDate: "",
         endDate: "",
         selectedParticipants: [],
+        isActive: true,
       })
       await loadData()
     } catch (error) {
@@ -118,19 +122,20 @@ export function CompetitionsManager() {
 
   const handleEdit = (competition: Competition) => {
     setEditingCompetition(competition)
-    
+
     // Converter datas ISO para formato YYYY-MM-DD esperado pelo input date
     const formatDateForInput = (dateString: string) => {
       const date = new Date(dateString)
-      return date.toISOString().split('T')[0]
+      return date.toISOString().split("T")[0]
     }
-    
+
     setFormData({
       name: competition.name,
       type: competition.type,
       startDate: formatDateForInput(competition.startDate),
       endDate: formatDateForInput(competition.endDate),
       selectedParticipants: competition.participants,
+      isActive: competition.isActive,
     })
     setIsEditDialogOpen(true)
   }
@@ -200,6 +205,22 @@ export function CompetitionsManager() {
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           required
         />
+      </div>
+
+      <div className="flex items-center space-x-2 p-3 border rounded-lg">
+        <Checkbox
+          id="isActive"
+          checked={formData.isActive}
+          onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked as boolean })}
+        />
+        <div className="flex-1">
+          <Label htmlFor="isActive" className="cursor-pointer font-medium">
+            Gincana Ativa
+          </Label>
+          <p className="text-sm text-muted-foreground">
+            Quando ativa, a gincana aparecerá para os participantes durante o período configurado
+          </p>
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -283,6 +304,7 @@ export function CompetitionsManager() {
               startDate: "",
               endDate: "",
               selectedParticipants: [],
+              isActive: true,
             })
           }}
           disabled={isLoading}
@@ -368,7 +390,10 @@ export function CompetitionsManager() {
                     const typeInfo = getCompetitionTypeInfo(competition.type)
                     const Icon = typeInfo?.icon || Target
                     return (
-                      <TableRow key={competition.id} className="block sm:table-row border-b sm:border-b-0 p-3 sm:p-0 mb-3 sm:mb-0 bg-card rounded-lg sm:bg-transparent sm:rounded-none">
+                      <TableRow
+                        key={competition.id}
+                        className="block sm:table-row border-b sm:border-b-0 p-3 sm:p-0 mb-3 sm:mb-0 bg-card rounded-lg sm:bg-transparent sm:rounded-none"
+                      >
                         <TableCell className="block sm:table-cell font-medium">
                           <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Nome:</span>
                           {competition.name}
@@ -385,7 +410,9 @@ export function CompetitionsManager() {
                           </span>
                         </TableCell>
                         <TableCell className="block sm:table-cell">
-                          <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Participantes:</span>
+                          <span className="sm:hidden font-semibold text-muted-foreground block mb-1">
+                            Participantes:
+                          </span>
                           {competition.participants.length}
                         </TableCell>
                         <TableCell className="block sm:table-cell">
@@ -397,11 +424,21 @@ export function CompetitionsManager() {
                         <TableCell className="block sm:table-cell">
                           <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Ações:</span>
                           <div className="flex space-x-2">
-                            <Button variant="outline" size="sm" onClick={() => handleEdit(competition)} className="flex-1 sm:flex-none">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(competition)}
+                              className="flex-1 sm:flex-none"
+                            >
                               <Edit className="h-4 w-4" />
                               <span className="sm:hidden ml-1">Editar</span>
                             </Button>
-                            <Button variant="outline" size="sm" onClick={() => handleDelete(competition.id)} className="flex-1 sm:flex-none">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDelete(competition.id)}
+                              className="flex-1 sm:flex-none"
+                            >
                               <Trash2 className="h-4 w-4" />
                               <span className="sm:hidden ml-1">Excluir</span>
                             </Button>
