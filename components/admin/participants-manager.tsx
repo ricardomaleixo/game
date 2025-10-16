@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { getParticipants, saveParticipant, updateParticipant, deleteParticipant } from "@/app/actions/database-actions"
+import { getParticipants, createParticipant, updateParticipant, deleteParticipant } from "@/app/actions/database-actions"
 import type { Participant } from "@/lib/database"
 import { authService } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
@@ -64,7 +64,7 @@ export function ParticipantsManager() {
         return;
       }
 
-      await saveParticipant(formData)      
+      await createParticipant(formData)      
 
       // await authService.register(formData.name, formData.email, "participant")
 

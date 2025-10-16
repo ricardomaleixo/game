@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth-prisma"
 import { findUserByEmail } from "@/app/actions/auth-actions"
 import { Button } from "@/components/ui/button"
@@ -20,6 +21,7 @@ export function LoginForm() {
   const [showPasswordField, setShowPasswordField] = useState(false)
   const [emailVerified, setEmailVerified] = useState(false)
   const { login } = useAuth()
+  const router = useRouter()
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,10 +71,13 @@ export function LoginForm() {
 
     try {
       const result = await login(email, password)
-      if (!result.success) {
+      if (result.success) {
+        // Redirecionamento bem-sucedido para a página principal
+        router.push("/")
+        return
+      } else {
         setError(result.error || "Senha incorreta")
       }
-      // Se result.success for true, o redirecionamento será feito automaticamente
     } catch (error) {
       console.error("Erro no login:", error)
       setError("Erro interno. Tente novamente.")

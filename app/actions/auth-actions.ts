@@ -100,6 +100,17 @@ export async function loginUser(email: string, password: string) {
 
       const isValidPassword = await verifyPassword(password, admin.password)
       if (isValidPassword) {
+        // Migrar hash SHA-256 para bcrypt se necessário
+        const { isLegacyHash } = await import("@/lib/crypto")
+        if (isLegacyHash(admin.password)) {
+          console.log('Migrando senha do admin para bcrypt...')
+          const newHash = await hashPassword(password)
+          await prisma.admin.update({
+            where: { id: admin.id },
+            data: { password: newHash }
+          })
+        }
+        
         // Definir cookie de sessão
         cookies().set({
           name: "session",
@@ -147,6 +158,17 @@ export async function loginUser(email: string, password: string) {
 
       const isValidPassword = await verifyPassword(password, participant.password)
       if (isValidPassword) {
+        // Migrar hash SHA-256 para bcrypt se necessário
+        const { isLegacyHash } = await import("@/lib/crypto")
+        if (isLegacyHash(participant.password)) {
+          console.log('Migrando senha do participante para bcrypt...')
+          const newHash = await hashPassword(password)
+          await prisma.participant.update({
+            where: { id: participant.id },
+            data: { password: newHash }
+          })
+        }
+        
         // Definir cookie de sessão
         cookies().set({
           name: "session",
@@ -455,9 +477,7 @@ export async function registerAdminAfterPayment(data: {
         name: data.name,
         email: data.email,
         password: "", // Senha vazia - será definida no primeiro acesso
-        cpfCnpj: data.cpfCnpj,
-        phone: data.phone,
-        stripeSessionId: data.sessionId,
+        //stripeSessionId: data.sessionId,
       },
     })
 

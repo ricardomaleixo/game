@@ -15,9 +15,9 @@ model Admin {
   email            String   @unique
   name             String
   password         String
-  cpfCnpj          String?  // Adicionado campo CPF/CNPJ
-  phone            String?  // Adicionado campo telefone
-  stripeSessionId  String?  // Adicionado campo para rastrear sessão do Stripe
+  cpfCnpj          String?  @unique
+  phone            String?
+  stripeSessionId  String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
