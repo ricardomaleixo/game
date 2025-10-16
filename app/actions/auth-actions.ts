@@ -1,7 +1,7 @@
 "use server"
 
 import { cookies } from "next/headers"
-import { prisma } from "@/lib/prisma"
+import prisma from "@/lib/prisma"
 import { hashPassword as hash, comparePassword as compare } from "@/lib/crypto"
 
 export interface AuthUser {

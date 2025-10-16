@@ -1,4 +1,4 @@
-import { prisma } from "./prisma"
+import prisma from "./prisma"
 import type { Participant, Sale, GameRule, Competition, Achievement } from "./database"
 
 export class PrismaDatabaseService {
@@ -78,7 +78,6 @@ export class PrismaDatabaseService {
   }
 
   async saveParticipant(participant: Omit<Participant, "id" | "createdAt">): Promise<Participant> {
-    
     const newParticipant = await prisma.participant.create({
       data: {
         name: participant.name,
