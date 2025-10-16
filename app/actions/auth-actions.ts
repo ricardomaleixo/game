@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers"
 import { prisma } from "@/lib/prisma"
-import bcrypt from "bcryptjs"
+import { hashPassword as hash, comparePassword as compare } from "@/lib/crypto"
 
 export interface AuthUser {
   id: string
@@ -21,12 +21,12 @@ export interface AuthState {
 
 // Função para gerar hash da senha
 async function hashPassword(password: string): Promise<string> {
-  return await bcrypt.hash(password, 10)
+  return await hash(password)
 }
 
 // Função para verificar senha
 async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-  return await bcrypt.compare(password, hashedPassword)
+  return await compare(password, hashedPassword)
 }
 
 // Função para obter usuário atual dos cookies
@@ -98,7 +98,7 @@ export async function loginUser(email: string, password: string) {
         }
       }
 
-      const isValidPassword = await bcrypt.compare(password, admin.password)
+      const isValidPassword = await verifyPassword(password, admin.password)
       if (isValidPassword) {
         // Definir cookie de sessão
         cookies().set({
@@ -145,7 +145,7 @@ export async function loginUser(email: string, password: string) {
         }
       }
 
-      const isValidPassword = await bcrypt.compare(password, participant.password)
+      const isValidPassword = await verifyPassword(password, participant.password)
       if (isValidPassword) {
         // Definir cookie de sessão
         cookies().set({
@@ -402,7 +402,7 @@ export async function findUserByEmail(
 // Função para configurar senha de participante
 export async function setParticipantPassword(participantId: string, password: string) {
   try {
-    const hashedPassword = await bcrypt.hash(password, 10)
+    const hashedPassword = await hashPassword(password)
 
     await prisma.participant.update({
       where: { id: participantId },
