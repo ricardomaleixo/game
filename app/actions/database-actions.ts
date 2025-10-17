@@ -852,3 +852,82 @@ export async function getMyTeamParticipants() {
     return []
   }
 }
+
+export async function declareWinners() {
+  try {
+    const adminId = await getCurrentAdminId()
+    if (!adminId) {
+      throw new Error("Admin não autenticado")
+    }
+
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // Buscar gincana ativa
+      const activeCompetition = await tx.competition.findFirst({
+        where: { adminId, isActive: true },
+      })
+
+      if (!activeCompetition) {
+        throw new Error("Nenhuma gincana ativa encontrada")
+      }
+
+      // Buscar participantes da gincana ordenados por pontos
+      const participantIds = activeCompetition.participants as string[]
+
+      if (!participantIds || participantIds.length === 0) {
+        throw new Error("Nenhum participante na gincana ativa")
+      }
+
+      const participants = await tx.participant.findMany({
+        where: {
+          id: { in: participantIds },
+          adminId,
+        },
+        orderBy: { points: "desc" },
+      })
+
+      // Criar achievements para os 3 primeiros colocados
+      const medals = [
+        { type: "gold" as const, description: "1º Lugar", points: 500 },
+        { type: "silver" as const, description: "2º Lugar", points: 300 },
+        { type: "bronze" as const, description: "3º Lugar", points: 200 },
+      ]
+
+      for (let i = 0; i < Math.min(3, participants.length); i++) {
+        const participant = participants[i]
+        const medal = medals[i]
+
+        await tx.achievement.create({
+          data: {
+            participantId: participant.id,
+            competitionId: activeCompetition.id,
+            type: medal.type,
+            description: `${medal.description} - ${activeCompetition.name}`,
+            points: participant.points, // Salvar pontos finais da gincana
+            date: new Date(),
+            adminId,
+          },
+        })
+      }
+
+      // Zerar pontos de todos os participantes
+      await tx.participant.updateMany({
+        where: {
+          id: { in: participantIds },
+          adminId,
+        },
+        data: { points: 0 },
+      })
+
+      // Desativar a gincana
+      await tx.competition.update({
+        where: { id: activeCompetition.id },
+        data: { isActive: false },
+      })
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error declaring winners:", error)
+    throw error
+  }
+}

@@ -45,22 +45,9 @@ export function Achievements() {
         setSales(participantSales)
         setCompetitions(allCompetitions)
 
-        let goldMedals = 0
-        let silverMedals = 0
-        let bronzeMedals = 0
-
-        // Verificar competições finalizadas onde o participante ganhou medalhas
-        for (const comp of allCompetitions) {
-          if (!comp.isActive && comp.participants.includes(participant.id)) {
-            // Competição finalizada e participante estava nela
-            // Aqui você pode adicionar lógica para verificar a posição final
-            // Por enquanto, vamos contar as conquistas existentes
-          }
-        }
-
-        goldMedals = participantAchievements.filter((a: Achievement) => a.type === "gold").length
-        silverMedals = participantAchievements.filter((a: Achievement) => a.type === "silver").length
-        bronzeMedals = participantAchievements.filter((a: Achievement) => a.type === "bronze").length
+        const goldMedals = participantAchievements.filter((a: Achievement) => a.type === "gold").length
+        const silverMedals = participantAchievements.filter((a: Achievement) => a.type === "silver").length
+        const bronzeMedals = participantAchievements.filter((a: Achievement) => a.type === "bronze").length
         const treasures = participantAchievements.filter((a: Achievement) => a.type === "treasure").length
         const completedMissions = participantAchievements.filter((a: Achievement) => a.type === "mission").length
 
@@ -114,43 +101,7 @@ export function Achievements() {
     }
   }
 
-  const generateSampleAchievements = () => {
-    const sampleAchievements = []
-
-    if (sales.length >= 1) {
-      sampleAchievements.push({
-        id: "first-sale",
-        type: "bronze" as const,
-        description: "Primeira Venda",
-        points: 50,
-        date: sales[0]?.date || new Date().toISOString(),
-      })
-    }
-
-    if (sales.length >= 5) {
-      sampleAchievements.push({
-        id: "five-sales",
-        type: "silver" as const,
-        description: "5 Vendas Realizadas",
-        points: 100,
-        date: sales[4]?.date || new Date().toISOString(),
-      })
-    }
-
-    if (sales.length >= 10) {
-      sampleAchievements.push({
-        id: "ten-sales",
-        type: "gold" as const,
-        description: "10 Vendas Realizadas",
-        points: 200,
-        date: sales[9]?.date || new Date().toISOString(),
-      })
-    }
-
-    return sampleAchievements
-  }
-
-  const displayAchievements = achievements.length > 0 ? achievements : generateSampleAchievements()
+  const displayAchievements = achievements
 
   if (loading) {
     return (
@@ -230,14 +181,16 @@ export function Achievements() {
             <span className="text-xl">🏅</span>
             <span>Suas Conquistas</span>
           </CardTitle>
-          <CardDescription>Todas as medalhas e conquistas que você desbloqueou</CardDescription>
+          <CardDescription>Histórico de medalhas e conquistas de todas as gincanas</CardDescription>
         </CardHeader>
         <CardContent>
           {displayAchievements.length === 0 ? (
             <div className="text-center py-8">
               <span className="text-4xl block mb-4">🏅</span>
               <p className="text-muted-foreground">Nenhuma conquista ainda</p>
-              <p className="text-sm text-muted-foreground">Faça vendas para desbloquear conquistas</p>
+              <p className="text-sm text-muted-foreground">
+                Participe de gincanas e fique entre os 3 primeiros para ganhar medalhas
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -252,7 +205,7 @@ export function Achievements() {
                       <h3 className="font-semibold">{achievement.description}</h3>
                       <div className="flex items-center justify-between mt-2">
                         <Badge variant="secondary" className="text-xs">
-                          +{achievement.points} pts
+                          {achievement.points} pts na gincana
                         </Badge>
                         <div className="flex items-center space-x-1 text-xs text-muted-foreground">
                           <span>📅</span>

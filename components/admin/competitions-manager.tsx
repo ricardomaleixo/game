@@ -9,7 +9,7 @@ import {
   saveCompetition,
   updateCompetition,
   deleteCompetition,
-  resetCompetition,
+  declareWinners, // Importando nova função
 } from "@/app/actions/database-actions"
 import type { Competition, Participant } from "@/lib/database"
 import { Button } from "@/components/ui/button"
@@ -46,7 +46,7 @@ export function CompetitionsManager() {
     isOpen: boolean
     competitionId: string | null
   }>({ isOpen: false, competitionId: null })
-  const [resetConfirmation, setResetConfirmation] = useState(false)
+  const [winnersConfirmation, setWinnersConfirmation] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     type: "" as Competition["type"],
@@ -168,31 +168,21 @@ export function CompetitionsManager() {
     setDeleteConfirmation({ isOpen: false, competitionId: null })
   }
 
-  const resetCompetitionHandler = () => {
-    setResetConfirmation(true)
+  const declareWinnersHandler = () => {
+    setWinnersConfirmation(true)
   }
 
-  const confirmReset = async () => {
+  const confirmDeclareWinners = async () => {
     setIsLoading(true)
     try {
-      await resetCompetition()
-
-      // Desativar todas as gincanas
-      for (const comp of competitions) {
-        if (comp.isActive) {
-          await updateCompetition(comp.id, {
-            ...comp,
-            isActive: false,
-          })
-        }
-      }
-
+      await declareWinners()
       await loadData()
     } catch (error) {
-      console.error("Erro ao resetar competição:", error)
+      console.error("Erro ao declarar vencedores:", error)
+      alert(error instanceof Error ? error.message : "Erro ao declarar vencedores")
     } finally {
       setIsLoading(false)
-      setResetConfirmation(false)
+      setWinnersConfirmation(false)
     }
   }
 
@@ -363,12 +353,12 @@ export function CompetitionsManager() {
             <div className="flex space-x-2">
               <Button
                 variant="outline"
-                onClick={resetCompetitionHandler}
-                className="flex items-center space-x-2 bg-transparent"
+                onClick={declareWinnersHandler}
+                className="flex items-center space-x-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 hover:from-yellow-600 hover:to-orange-600"
                 disabled={isLoading}
               >
                 <Trophy className="h-4 w-4" />
-                <span>Resetar Gincana</span>
+                <span>Declarar Vencedores</span>
               </Button>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
@@ -509,14 +499,14 @@ export function CompetitionsManager() {
       />
 
       <ConfirmationModal
-        isOpen={resetConfirmation}
-        onClose={() => setResetConfirmation(false)}
-        onConfirm={confirmReset}
-        title="Resetar Gincana"
-        description="Tem certeza que deseja resetar todas as pontuações e iniciar uma nova gincana? Esta ação não pode ser desfeita."
-        confirmText="Resetar"
+        isOpen={winnersConfirmation}
+        onClose={() => setWinnersConfirmation(false)}
+        onConfirm={confirmDeclareWinners}
+        title="Declarar Vencedores"
+        description="Ao declarar os vencedores, os 3 primeiros colocados receberão medalhas (ouro, prata e bronze), seus pontos serão salvos no histórico de conquistas, todos os pontos serão zerados e a gincana será encerrada. Deseja continuar?"
+        confirmText="Declarar Vencedores"
         cancelText="Cancelar"
-        variant="destructive"
+        variant="default"
       />
     </div>
   )
