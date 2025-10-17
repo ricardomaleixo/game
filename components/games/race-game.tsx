@@ -34,9 +34,33 @@ export function RaceGame({ competition, participant }: RaceGameProps) {
   const loadRaceData = async () => {
     setIsLoading(true)
     try {
+      console.log("[v0] RaceGame - Competition:", competition)
+      console.log("[v0] RaceGame - Participant:", participant)
+
       // Get ranking for this competition
       const allParticipants = await getParticipants()
-      const competitionParticipants = allParticipants.filter((p) => competition.participants.includes(p.id))
+      console.log("[v0] RaceGame - All participants:", allParticipants)
+
+      // Parse participants field correctly (it's stored as JSON)
+      let participantIds: string[] = []
+      if (competition.participants) {
+        if (typeof competition.participants === "string") {
+          try {
+            participantIds = JSON.parse(competition.participants)
+          } catch (e) {
+            console.error("[v0] RaceGame - Error parsing participants:", e)
+            participantIds = []
+          }
+        } else if (Array.isArray(competition.participants)) {
+          participantIds = competition.participants
+        }
+      }
+
+      console.log("[v0] RaceGame - Participant IDs from competition:", participantIds)
+
+      const competitionParticipants = allParticipants.filter((p) => participantIds.includes(p.id))
+      console.log("[v0] RaceGame - Filtered competition participants:", competitionParticipants)
+
       const sorted = competitionParticipants.sort((a, b) => b.points - a.points)
       setRanking(sorted)
 

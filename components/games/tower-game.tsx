@@ -27,13 +27,37 @@ export function TowerGame({ competition, participant }: TowerGameProps) {
   const loadTowerData = async () => {
     setIsLoading(true)
     try {
+      console.log("[v0] TowerGame - Competition:", competition)
+      console.log("[v0] TowerGame - Participant:", participant)
+
       // Calculate tower height based on points (each 10 points = 1 floor)
       const height = Math.floor(participant.points / 10)
       setTowerHeight(height)
 
       // Get ranking for this competition
       const allParticipants = await getParticipants()
-      const competitionParticipants = allParticipants.filter((p) => competition.participants.includes(p.id))
+      console.log("[v0] TowerGame - All participants:", allParticipants)
+
+      // Parse participants field correctly (it's stored as JSON)
+      let participantIds: string[] = []
+      if (competition.participants) {
+        if (typeof competition.participants === "string") {
+          try {
+            participantIds = JSON.parse(competition.participants)
+          } catch (e) {
+            console.error("[v0] TowerGame - Error parsing participants:", e)
+            participantIds = []
+          }
+        } else if (Array.isArray(competition.participants)) {
+          participantIds = competition.participants
+        }
+      }
+
+      console.log("[v0] TowerGame - Participant IDs from competition:", participantIds)
+
+      const competitionParticipants = allParticipants.filter((p) => participantIds.includes(p.id))
+      console.log("[v0] TowerGame - Filtered competition participants:", competitionParticipants)
+
       const sorted = competitionParticipants.sort((a, b) => b.points - a.points)
       setRanking(sorted)
       setAllCompetitionParticipants(sorted)
