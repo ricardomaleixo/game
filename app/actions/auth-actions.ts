@@ -3,6 +3,7 @@
 import { cookies } from "next/headers"
 import prisma from "@/lib/prisma"
 import { hashPassword as hash, comparePassword as compare } from "@/lib/crypto"
+import { checkRateLimit, RateLimitError } from "@/lib/rate-limit"
 
 export interface AuthUser {
   id: string
@@ -82,6 +83,15 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 // Função para login
 export async function loginUser(email: string, password: string) {
   try {
+    try {
+      checkRateLimit(email, "login")
+    } catch (error) {
+      if (error instanceof RateLimitError) {
+        return { success: false, message: error.message }
+      }
+      throw error
+    }
+
     // Verificar se é admin
     const admin = await prisma.admin.findUnique({
       where: { email },
@@ -103,14 +113,14 @@ export async function loginUser(email: string, password: string) {
         // Migrar hash SHA-256 para bcrypt se necessário
         const { isLegacyHash } = await import("@/lib/crypto")
         if (isLegacyHash(admin.password)) {
-          console.log('Migrando senha do admin para bcrypt...')
+          console.log("Migrando senha do admin para bcrypt...")
           const newHash = await hashPassword(password)
           await prisma.admin.update({
             where: { id: admin.id },
-            data: { password: newHash }
+            data: { password: newHash },
           })
         }
-        
+
         // Definir cookie de sessão
         cookies().set({
           name: "session",
@@ -161,14 +171,14 @@ export async function loginUser(email: string, password: string) {
         // Migrar hash SHA-256 para bcrypt se necessário
         const { isLegacyHash } = await import("@/lib/crypto")
         if (isLegacyHash(participant.password)) {
-          console.log('Migrando senha do participante para bcrypt...')
+          console.log("Migrando senha do participante para bcrypt...")
           const newHash = await hashPassword(password)
           await prisma.participant.update({
             where: { id: participant.id },
-            data: { password: newHash }
+            data: { password: newHash },
           })
         }
-        
+
         // Definir cookie de sessão
         cookies().set({
           name: "session",
@@ -219,6 +229,15 @@ export async function registerAdmin(
   password: string,
 ): Promise<{ success: boolean; user?: AuthUser; error?: string }> {
   try {
+    try {
+      checkRateLimit(email, "register")
+    } catch (error) {
+      if (error instanceof RateLimitError) {
+        return { success: false, error: error.message }
+      }
+      throw error
+    }
+
     // Verificar se já existe admin com este email
     const existingAdmin = await prisma.admin.findUnique({
       where: { email },
@@ -424,6 +443,15 @@ export async function findUserByEmail(
 // Função para configurar senha de participante
 export async function setParticipantPassword(participantId: string, password: string) {
   try {
+    try {
+      checkRateLimit(participantId, "passwordReset")
+    } catch (error) {
+      if (error instanceof RateLimitError) {
+        return { success: false, message: error.message }
+      }
+      throw error
+    }
+
     const hashedPassword = await hashPassword(password)
 
     await prisma.participant.update({
@@ -462,6 +490,15 @@ export async function registerAdminAfterPayment(data: {
   sessionId: string
 }): Promise<{ success: boolean; user?: AuthUser; error?: string }> {
   try {
+    try {
+      checkRateLimit(data.email, "register")
+    } catch (error) {
+      if (error instanceof RateLimitError) {
+        return { success: false, error: error.message }
+      }
+      throw error
+    }
+
     // Verificar se já existe admin com este email
     const existingAdmin = await prisma.admin.findUnique({
       where: { email: data.email },
@@ -500,6 +537,15 @@ export async function registerAdminAfterPayment(data: {
 // Função para configurar senha de admin
 export async function setAdminPassword(email: string, password: string): Promise<{ success: boolean; error?: string }> {
   try {
+    try {
+      checkRateLimit(email, "passwordReset")
+    } catch (error) {
+      if (error instanceof RateLimitError) {
+        return { success: false, error: error.message }
+      }
+      throw error
+    }
+
     const hashedPassword = await hashPassword(password)
 
     await prisma.admin.update({

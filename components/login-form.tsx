@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { PasswordSetup } from "./password-setup"
+import { useCsrfToken } from "@/hooks/use-csrf"
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
@@ -22,6 +23,7 @@ export function LoginForm() {
   const [emailVerified, setEmailVerified] = useState(false)
   const { login } = useAuth()
   const router = useRouter()
+  const { token: csrfToken, isLoading: csrfLoading } = useCsrfToken()
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,7 +84,7 @@ export function LoginForm() {
       console.error("Erro no login:", error)
       setError("Erro interno. Tente novamente.")
     }
-    
+
     setLoading(false)
   }
 
@@ -102,6 +104,17 @@ export function LoginForm() {
 
   if (showPasswordSetup && userForSetup) {
     return <PasswordSetup user={userForSetup} onPasswordSet={handlePasswordSetComplete} />
+  }
+
+  if (csrfLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -194,7 +207,9 @@ export function LoginForm() {
               </div>
 
               <div className="p-3 sm:p-4 bg-muted rounded-lg">
-                <p className="text-xs sm:text-sm text-muted-foreground text-center mb-2">Credenciais de demonstração:</p>
+                <p className="text-xs sm:text-sm text-muted-foreground text-center mb-2">
+                  Credenciais de demonstração:
+                </p>
                 <div className="text-xs space-y-1 text-center sm:text-left">
                   <p>
                     <strong>Admin:</strong> admin@empresa.com

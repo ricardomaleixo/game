@@ -27,15 +27,12 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Plus, Target, Trophy, Building, Zap, Aperture as Treasure, Medal, MapPin, Edit, Trash2 } from "lucide-react"
+import { Plus, Target, Trophy, Building, Zap, Edit, Trash2 } from "lucide-react"
 import { ConfirmationModal } from "@/components/ui/confirmation-modal"
 
 const competitionTypes = [
   { value: "tower", label: "Torre de Pontos", icon: Building, description: "Cada venda aumenta a torre visual" },
   { value: "race", label: "Corrida Virtual", icon: Zap, description: "Avatar avança em uma pista a cada venda" },
-  { value: "treasure", label: "Caça ao Tesouro", icon: Treasure, description: "Vendas abrem baús com tesouros" },
-  { value: "medals", label: "Ranking de Medalhas", icon: Medal, description: "Medalhas por metas parciais" },
-  { value: "missions", label: "Missões Semanais", icon: MapPin, description: "Desafios específicos para cumprir" },
 ]
 
 export function CompetitionsManager() {

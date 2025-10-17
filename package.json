@@ -44,10 +44,8 @@
     "@radix-ui/react-tooltip": "1.1.6",
     "@stripe/react-stripe-js": "latest",
     "@stripe/stripe-js": "latest",
-    "@types/bcryptjs": "^2.4.6",
     "autoprefixer": "^10.4.20",
     "bcryptjs": "latest",
-    "child_process": "latest",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
@@ -74,6 +72,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.9",
+    "@types/bcryptjs": "^2.4.6",
     "@types/next": "^8.0.7",
     "@types/node": "^22",
     "@types/react": "^18",
