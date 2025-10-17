@@ -7,7 +7,8 @@ import { GameRulesManager } from "@/components/admin/game-rules-manager"
 import { SalesManager } from "@/components/admin/sales-manager"
 import { CompetitionsManager } from "@/components/admin/competitions-manager"
 import { RankingView } from "@/components/admin/ranking-view"
-import { LogOut, Users, Settings, TrendingUp, Trophy, Target } from "lucide-react"
+import { AdminAchievementsView } from "@/components/admin/admin-achievements-view"
+import { LogOut, Users, Settings, TrendingUp, Trophy, Target, Award } from "lucide-react"
 
 export function AdminDashboard() {
   const { user, logout } = useAuth()
@@ -41,7 +42,7 @@ export function AdminDashboard() {
       {/* Main Content */}
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <Tabs defaultValue="participants" className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto sm:h-10">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-auto sm:h-10">
             <TabsTrigger
               value="participants"
               className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0"
@@ -60,14 +61,14 @@ export function AdminDashboard() {
             </TabsTrigger>
             <TabsTrigger
               value="sales"
-              className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 col-span-2 sm:col-span-1"
+              className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0"
             >
               <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Pontos</span>
             </TabsTrigger>
             <TabsTrigger
               value="competitions"
-              className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 col-span-2 sm:col-span-1"
+              className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0"
             >
               <Target className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Gincanas</span>
@@ -75,10 +76,18 @@ export function AdminDashboard() {
             </TabsTrigger>
             <TabsTrigger
               value="ranking"
-              className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 col-span-2 sm:col-span-1"
+              className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0"
             >
               <Trophy className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Ranking</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="achievements"
+              className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0"
+            >
+              <Award className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Conquistas</span>
+              <span className="sm:hidden">Awards</span>
             </TabsTrigger>
           </TabsList>
 
@@ -100,6 +109,10 @@ export function AdminDashboard() {
 
           <TabsContent value="ranking">
             <RankingView />
+          </TabsContent>
+
+          <TabsContent value="achievements">
+            <AdminAchievementsView />
           </TabsContent>
         </Tabs>
       </main>

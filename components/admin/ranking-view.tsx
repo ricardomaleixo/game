@@ -7,14 +7,13 @@ import { reportsService } from "@/lib/reports"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Trophy, Medal, Award, Crown, Star, Download, RefreshCw, Zap } from "lucide-react"
-import { ConfirmationModal } from "@/components/ui/confirmation-modal"
+import { Trophy, Medal, Award, Crown, Star, Download, RefreshCw } from "lucide-react"
 
 export function RankingView() {
   const [ranking, setRanking] = useState<Participant[]>([])
   const [winners, setWinners] = useState<{ [key: string]: string }>({})
   const [isLoading, setIsLoading] = useState(false)
-  const [declareWinnersConfirmation, setDeclareWinnersConfirmation] = useState(false)
+  const [activeCompetition, setActiveCompetition] = useState<string>("")
 
   useEffect(() => {
     loadRanking()
@@ -27,6 +26,10 @@ export function RankingView() {
       setRanking(rankingData)
 
       const competitions = await getCompetitions()
+
+      const active = competitions.find((c) => c.isActive)
+      setActiveCompetition(active?.name || "Nenhuma gincana ativa")
+
       const competitionWinners: { [key: string]: string } = {}
 
       competitions.forEach(async (competition) => {
@@ -81,32 +84,6 @@ export function RankingView() {
     window.URL.revokeObjectURL(url)
   }
 
-  const declareWinners = () => {
-    setDeclareWinnersConfirmation(true)
-  }
-
-  const confirmDeclareWinners = async () => {
-    setIsLoading(true)
-    try {
-      const competitions = await getCompetitions()
-      const activeCompetitions = competitions.filter((c) => c.isActive)
-
-      activeCompetitions.forEach(async (competition) => {
-        const winner = await reportsService.determineWinner(competition)
-        // In a real app, you would save this to the database
-        console.log(`Vencedor da ${competition.name}: ${winner.name} com ${winner.points} pontos`)
-      })
-
-      alert("Vencedores declarados com sucesso! Verifique os relatórios para mais detalhes.")
-      await loadRanking()
-    } catch (error) {
-      console.error("Erro ao declarar vencedores:", error)
-    } finally {
-      setIsLoading(false)
-      setDeclareWinnersConfirmation(false)
-    }
-  }
-
   return (
     <div className="space-y-6">
       <Card>
@@ -117,7 +94,9 @@ export function RankingView() {
                 <Trophy className="h-5 w-5" />
                 <span>Ranking Atual</span>
               </CardTitle>
-              <CardDescription>Classificação dos participantes em tempo real</CardDescription>
+              <CardDescription>
+                Gincana: <span className="font-semibold">{activeCompetition}</span>
+              </CardDescription>
             </div>
             <div className="flex space-x-2">
               <Button
@@ -128,14 +107,6 @@ export function RankingView() {
               >
                 <RefreshCw className="h-4 w-4" />
                 <span>{isLoading ? "Atualizando..." : "Atualizar"}</span>
-              </Button>
-              <Button
-                onClick={declareWinners}
-                className="flex items-center space-x-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
-                disabled={isLoading}
-              >
-                <Zap className="h-4 w-4" />
-                <span>Declarar Vencedores</span>
               </Button>
               <Button onClick={exportRanking} className="flex items-center space-x-2" disabled={isLoading}>
                 <Download className="h-4 w-4" />
@@ -203,7 +174,7 @@ export function RankingView() {
                 <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center space-x-2">
-                      <Zap className="h-5 w-5 text-purple-600" />
+                      <Trophy className="h-5 w-5 text-purple-600" />
                       <span>Vencedores por Gincana</span>
                     </CardTitle>
                   </CardHeader>
@@ -260,16 +231,6 @@ export function RankingView() {
           )}
         </CardContent>
       </Card>
-      <ConfirmationModal
-        isOpen={declareWinnersConfirmation}
-        onClose={() => setDeclareWinnersConfirmation(false)}
-        onConfirm={confirmDeclareWinners}
-        title="Declarar Vencedores"
-        description="Tem certeza que deseja declarar os vencedores e finalizar as gincanas ativas? Esta ação não pode ser desfeita."
-        confirmText="Declarar Vencedores"
-        cancelText="Cancelar"
-        variant="default"
-      />
     </div>
   )
 }

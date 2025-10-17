@@ -909,13 +909,19 @@ export async function declareWinners() {
         })
       }
 
-      // Zerar pontos de todos os participantes
       await tx.participant.updateMany({
         where: {
           id: { in: participantIds },
           adminId,
         },
         data: { points: 0 },
+      })
+
+      await tx.sale.deleteMany({
+        where: {
+          participantId: { in: participantIds },
+          adminId,
+        },
       })
 
       // Desativar a gincana

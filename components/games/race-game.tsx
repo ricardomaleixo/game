@@ -47,8 +47,11 @@ export function RaceGame({ competition, participant }: RaceGameProps) {
       setPosition(pos)
 
       const allSales = await getSales()
+      console.log("[v0] RaceGame - All sales:", allSales)
+
       const participantSales = allSales.filter((s) => s.participantId === participant.id)
       setSales(participantSales)
+      console.log("[v0] RaceGame - Participant sales:", participantSales)
 
       // Calculate race progress (each sale moves avatar forward)
       const maxSales = 20 // Race finish line at 20 sales
@@ -58,6 +61,7 @@ export function RaceGame({ competition, participant }: RaceGameProps) {
       const raceDataPromises = allParticipants.map(async (p) => {
         const pSales = allSales.filter((s) => s.participantId === p.id)
         const pProgress = Math.min((pSales.length / maxSales) * 100, 100)
+        console.log(`[v0] RaceGame - ${p.name}: ${pSales.length} sales, ${pProgress}% progress`)
         return {
           participant: p,
           salesCount: pSales.length,
@@ -111,25 +115,25 @@ export function RaceGame({ competition, participant }: RaceGameProps) {
                   }`}
                 >
                   {/* Track Lines */}
-                  <div className="absolute inset-0 flex items-center">
+                  <div className="absolute inset-0 flex items-center pointer-events-none">
                     <div className="w-full h-1 bg-white rounded-full opacity-50" />
                     <div className="absolute w-full h-0.5 bg-gray-300 rounded-full" style={{ top: "45%" }} />
                     <div className="absolute w-full h-0.5 bg-gray-300 rounded-full" style={{ top: "55%" }} />
                   </div>
 
                   {/* Start Line */}
-                  <div className="absolute left-4 top-2 bottom-2 w-1 bg-green-500 rounded-full" />
+                  <div className="absolute left-6 top-3 bottom-3 w-1 bg-green-500 rounded-full z-10" />
 
                   {/* Finish Line */}
-                  <div className="absolute right-4 top-2 bottom-2 w-1 bg-red-500 rounded-full" />
-                  <div className="absolute right-2 top-1">
+                  <div className="absolute right-6 top-3 bottom-3 w-1 bg-red-500 rounded-full z-10" />
+                  <div className="absolute right-3 top-2 z-10">
                     <Flag className="h-3 w-3 sm:h-4 sm:w-4 text-red-600" />
                   </div>
 
                   {/* Avatar */}
                   <div
-                    className="absolute top-1/2 transform -translate-y-1/2 transition-all duration-1000 ease-out"
-                    style={{ left: `${Math.max(8, Math.min(data.progress * 0.85 + 8, 85))}%` }}
+                    className="absolute top-1/2 transform -translate-y-1/2 transition-all duration-1000 ease-out z-20"
+                    style={{ left: `${Math.max(10, Math.min(data.progress * 0.8 + 10, 85))}%` }}
                   >
                     <div
                       className={`w-7 h-7 sm:w-8 sm:h-8 ${
@@ -145,7 +149,7 @@ export function RaceGame({ competition, participant }: RaceGameProps) {
                   </div>
 
                   {/* Participant Info */}
-                  <div className="absolute left-2 bottom-1 sm:bottom-2">
+                  <div className="absolute left-2 bottom-1 sm:bottom-2 z-10">
                     <p
                       className={`text-xs sm:text-sm font-semibold ${
                         isCurrentUser ? "text-primary" : "text-muted-foreground"
@@ -158,7 +162,7 @@ export function RaceGame({ competition, participant }: RaceGameProps) {
                   </div>
 
                   {/* Position Badge */}
-                  <div className="absolute right-2 bottom-1 sm:bottom-2">
+                  <div className="absolute right-2 bottom-1 sm:bottom-2 z-10">
                     <Badge variant={index === 0 ? "default" : "secondary"} className="text-xs">
                       #{index + 1}
                     </Badge>
