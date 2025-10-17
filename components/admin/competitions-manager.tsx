@@ -9,7 +9,6 @@ import {
   saveCompetition,
   updateCompetition,
   deleteCompetition,
-  declareWinners, // Importando nova função
 } from "@/app/actions/database-actions"
 import type { Competition, Participant } from "@/lib/database"
 import { Button } from "@/components/ui/button"
@@ -27,7 +26,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Plus, Target, Trophy, Building, Zap, Edit, Trash2 } from "lucide-react"
+import { Plus, Target, Building, Zap, Edit, Trash2 } from "lucide-react"
 import { ConfirmationModal } from "@/components/ui/confirmation-modal"
 
 const competitionTypes = [
@@ -46,11 +45,10 @@ export function CompetitionsManager() {
     isOpen: boolean
     competitionId: string | null
   }>({ isOpen: false, competitionId: null })
-  const [winnersConfirmation, setWinnersConfirmation] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     type: "" as Competition["type"],
-    startDate: new Date().toISOString().split("T")[0], // Data inicial padrão = HOJE
+    startDate: new Date().toISOString().split("T")[0],
     endDate: "",
     selectedParticipants: [] as string[],
     isActive: true,
@@ -91,7 +89,6 @@ export function CompetitionsManager() {
         setEditingCompetition(null)
       } else {
         if (formData.isActive) {
-          // Desativar todas as gincanas ativas
           for (const comp of competitions) {
             if (comp.isActive) {
               await updateCompetition(comp.id, {
@@ -116,7 +113,7 @@ export function CompetitionsManager() {
       setFormData({
         name: "",
         type: "" as Competition["type"],
-        startDate: new Date().toISOString().split("T")[0], // Resetar para data de hoje
+        startDate: new Date().toISOString().split("T")[0],
         endDate: "",
         selectedParticipants: [],
         isActive: true,
@@ -132,7 +129,6 @@ export function CompetitionsManager() {
   const handleEdit = (competition: Competition) => {
     setEditingCompetition(competition)
 
-    // Converter datas ISO para formato YYYY-MM-DD esperado pelo input date
     const formatDateForInput = (dateString: string) => {
       const date = new Date(dateString)
       return date.toISOString().split("T")[0]
@@ -166,24 +162,6 @@ export function CompetitionsManager() {
       }
     }
     setDeleteConfirmation({ isOpen: false, competitionId: null })
-  }
-
-  const declareWinnersHandler = () => {
-    setWinnersConfirmation(true)
-  }
-
-  const confirmDeclareWinners = async () => {
-    setIsLoading(true)
-    try {
-      await declareWinners()
-      await loadData()
-    } catch (error) {
-      console.error("Erro ao declarar vencedores:", error)
-      alert(error instanceof Error ? error.message : "Erro ao declarar vencedores")
-    } finally {
-      setIsLoading(false)
-      setWinnersConfirmation(false)
-    }
   }
 
   const handleParticipantToggle = (participantId: string, checked: boolean) => {
@@ -350,35 +328,24 @@ export function CompetitionsManager() {
               </CardTitle>
               <CardDescription>Crie e gerencie as competições gamificadas</CardDescription>
             </div>
-            <div className="flex space-x-2">
-              <Button
-                variant="outline"
-                onClick={declareWinnersHandler}
-                className="flex items-center space-x-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 hover:from-yellow-600 hover:to-orange-600"
-                disabled={isLoading}
-              >
-                <Trophy className="h-4 w-4" />
-                <span>Declarar Vencedores</span>
-              </Button>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="flex items-center space-x-2" disabled={isLoading}>
-                    <Plus className="h-4 w-4" />
-                    <span>Nova Gincana</span>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center space-x-2">
-                      <Target className="h-5 w-5" />
-                      <span>Criar Nova Gincana</span>
-                    </DialogTitle>
-                    <DialogDescription>Configure uma nova competição gamificada</DialogDescription>
-                  </DialogHeader>
-                  {renderForm()}
-                </DialogContent>
-              </Dialog>
-            </div>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center space-x-2" disabled={isLoading}>
+                  <Plus className="h-4 w-4" />
+                  <span>Nova Gincana</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center space-x-2">
+                    <Target className="h-5 w-5" />
+                    <span>Criar Nova Gincana</span>
+                  </DialogTitle>
+                  <DialogDescription>Configure uma nova competição gamificada</DialogDescription>
+                </DialogHeader>
+                {renderForm()}
+              </DialogContent>
+            </Dialog>
           </div>
         </CardHeader>
         <CardContent className="p-2 sm:p-6">
@@ -496,17 +463,6 @@ export function CompetitionsManager() {
         confirmText="Excluir"
         cancelText="Cancelar"
         variant="destructive"
-      />
-
-      <ConfirmationModal
-        isOpen={winnersConfirmation}
-        onClose={() => setWinnersConfirmation(false)}
-        onConfirm={confirmDeclareWinners}
-        title="Declarar Vencedores"
-        description="Ao declarar os vencedores, os 3 primeiros colocados receberão medalhas (ouro, prata e bronze), seus pontos serão salvos no histórico de conquistas, todos os pontos serão zerados e a gincana será encerrada. Deseja continuar?"
-        confirmText="Declarar Vencedores"
-        cancelText="Cancelar"
-        variant="default"
       />
     </div>
   )

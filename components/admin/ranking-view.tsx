@@ -1,19 +1,21 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getRanking, getCompetitions } from "@/app/actions/database-actions"
+import { getRanking, getCompetitions, declareWinners } from "@/app/actions/database-actions"
 import type { Participant } from "@/lib/database"
 import { reportsService } from "@/lib/reports"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Trophy, Medal, Award, Crown, Star, Download, RefreshCw } from "lucide-react"
+import { ConfirmationModal } from "@/components/ui/confirmation-modal"
 
 export function RankingView() {
   const [ranking, setRanking] = useState<Participant[]>([])
   const [winners, setWinners] = useState<{ [key: string]: string }>({})
   const [isLoading, setIsLoading] = useState(false)
   const [activeCompetition, setActiveCompetition] = useState<string>("")
+  const [winnersConfirmation, setWinnersConfirmation] = useState(false)
 
   useEffect(() => {
     loadRanking()
@@ -42,6 +44,24 @@ export function RankingView() {
       console.error("Erro ao carregar ranking:", error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const declareWinnersHandler = () => {
+    setWinnersConfirmation(true)
+  }
+
+  const confirmDeclareWinners = async () => {
+    setIsLoading(true)
+    try {
+      await declareWinners()
+      await loadRanking()
+    } catch (error) {
+      console.error("Erro ao declarar vencedores:", error)
+      alert(error instanceof Error ? error.message : "Erro ao declarar vencedores")
+    } finally {
+      setIsLoading(false)
+      setWinnersConfirmation(false)
     }
   }
 
@@ -99,6 +119,15 @@ export function RankingView() {
               </CardDescription>
             </div>
             <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                onClick={declareWinnersHandler}
+                className="flex items-center space-x-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 hover:from-yellow-600 hover:to-orange-600"
+                disabled={isLoading}
+              >
+                <Trophy className="h-4 w-4" />
+                <span>Declarar Vencedores</span>
+              </Button>
               <Button
                 variant="outline"
                 onClick={loadRanking}
@@ -231,6 +260,17 @@ export function RankingView() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmationModal
+        isOpen={winnersConfirmation}
+        onClose={() => setWinnersConfirmation(false)}
+        onConfirm={confirmDeclareWinners}
+        title="Declarar Vencedores"
+        description="Ao declarar os vencedores, os 3 primeiros colocados receberão medalhas (ouro, prata e bronze), seus pontos serão salvos no histórico de conquistas, todos os pontos e vendas serão zerados e a gincana será encerrada. Deseja continuar?"
+        confirmText="Declarar Vencedores"
+        cancelText="Cancelar"
+        variant="default"
+      />
     </div>
   )
 }

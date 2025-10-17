@@ -119,6 +119,11 @@ export async function updateParticipant(id: string, updates: UpdateParticipant):
     if (!adminId) {
       throw new Error("Admin não autenticado")
     }
+
+    if (updates.points !== undefined && updates.points < 0) {
+      updates.points = 0
+    }
+
     await prisma.participant.updateMany({
       where: { id, adminId },
       data: updates,
@@ -355,10 +360,33 @@ export async function deleteGameRule(id: string) {
 export async function getSales() {
   try {
     const adminId = await getCurrentAdminId()
-    if (!adminId) return []
+
+    if (adminId) {
+      // Admin: retorna todas as vendas
+      const sales = await prisma.sale.findMany({
+        where: { adminId },
+        orderBy: { date: "desc" },
+      })
+
+      return sales.map((s: Sale) => ({
+        id: s.id,
+        participantId: s.participantId,
+        productName: s.productName,
+        points: s.points,
+        date: s.date.toISOString(),
+        type: s.type as "sale" | "rental",
+        adminId: s.adminId,
+      }))
+    }
+
+    // Participante: retorna vendas do seu admin
+    const participantData = await getCurrentParticipantData()
+    if (!participantData) {
+      return []
+    }
 
     const sales = await prisma.sale.findMany({
-      where: { adminId },
+      where: { adminId: participantData.adminId },
       orderBy: { date: "desc" },
     })
 
