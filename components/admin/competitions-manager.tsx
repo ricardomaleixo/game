@@ -76,6 +76,22 @@ export function CompetitionsManager() {
     setIsLoading(true)
 
     try {
+      if (formData.isActive) {
+        const activeCompetition = competitions.find((c) => c.isActive && c.id !== editingCompetition?.id)
+
+        if (activeCompetition) {
+          const confirmMessage = `Já existe uma gincana ativa (${activeCompetition.name}). Para ativar uma nova gincana, você precisa primeiro declarar os vencedores da gincana atual na aba "Ranking". Deseja continuar criando esta gincana como INATIVA?`
+
+          if (!confirm(confirmMessage)) {
+            setIsLoading(false)
+            return
+          }
+
+          // Forçar gincana como inativa
+          formData.isActive = false
+        }
+      }
+
       if (editingCompetition) {
         await updateCompetition(editingCompetition.id, {
           name: formData.name,
@@ -88,17 +104,6 @@ export function CompetitionsManager() {
         setIsEditDialogOpen(false)
         setEditingCompetition(null)
       } else {
-        if (formData.isActive) {
-          for (const comp of competitions) {
-            if (comp.isActive) {
-              await updateCompetition(comp.id, {
-                ...comp,
-                isActive: false,
-              })
-            }
-          }
-        }
-
         await saveCompetition({
           name: formData.name,
           type: formData.type,

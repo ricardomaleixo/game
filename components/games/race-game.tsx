@@ -110,46 +110,44 @@ export function RaceGame({ competition, participant }: RaceGameProps) {
               return (
                 <div
                   key={data.participant.id}
-                  className={`relative bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 rounded-lg p-3 sm:p-4 min-h-[80px] ${
+                  className={`relative bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100 rounded-lg p-3 sm:p-4 min-h-[100px] ${
                     isCurrentUser ? "ring-2 ring-primary" : ""
                   }`}
                 >
-                  {/* Track Lines */}
-                  <div className="absolute inset-0 flex items-center pointer-events-none">
-                    <div className="w-full h-1 bg-white rounded-full opacity-50" />
-                    <div className="absolute w-full h-0.5 bg-gray-300 rounded-full" style={{ top: "45%" }} />
+                  <div className="absolute inset-0 flex items-center pointer-events-none opacity-30">
+                    <div className="w-full h-1 bg-gray-400 rounded-full" style={{ top: "45%" }} />
+                    <div className="absolute w-full h-0.5 bg-gray-300 rounded-full" style={{ top: "50%" }} />
                     <div className="absolute w-full h-0.5 bg-gray-300 rounded-full" style={{ top: "55%" }} />
                   </div>
 
-                  {/* Start Line */}
-                  <div className="absolute left-6 top-3 bottom-3 w-1 bg-green-500 rounded-full z-10" />
-
-                  {/* Finish Line */}
-                  <div className="absolute right-6 top-3 bottom-3 w-1 bg-red-500 rounded-full z-10" />
-                  <div className="absolute right-3 top-2 z-10">
-                    <Flag className="h-3 w-3 sm:h-4 sm:w-4 text-red-600" />
+                  <div className="absolute left-8 top-4 bottom-4 w-1.5 bg-green-500 rounded-full z-0 shadow-sm" />
+                  <div className="absolute left-6 top-2 z-0">
+                    <div className="text-xs font-bold text-green-600 bg-white/80 px-1 rounded">LARGADA</div>
                   </div>
 
-                  {/* Avatar */}
+                  <div className="absolute right-8 top-4 bottom-4 w-1.5 bg-red-500 rounded-full z-0 shadow-sm" />
+                  <div className="absolute right-4 top-2 z-0">
+                    <Flag className="h-4 w-4 text-red-600 drop-shadow" />
+                  </div>
+
                   <div
-                    className="absolute top-1/2 transform -translate-y-1/2 transition-all duration-1000 ease-out z-20"
-                    style={{ left: `${Math.max(10, Math.min(data.progress * 0.8 + 10, 85))}%` }}
+                    className="absolute top-1/2 transform -translate-y-1/2 transition-all duration-1000 ease-out z-30"
+                    style={{ left: `${Math.max(12, Math.min(data.progress * 0.75 + 12, 82))}%` }}
                   >
                     <div
-                      className={`w-7 h-7 sm:w-8 sm:h-8 ${
+                      className={`w-8 h-8 sm:w-10 sm:h-10 ${
                         isCurrentUser
                           ? "bg-gradient-to-br from-primary to-accent ring-2 ring-primary/50"
                           : "bg-gradient-to-br from-gray-400 to-gray-500"
                       } rounded-full flex items-center justify-center shadow-lg`}
                     >
-                      <span className="text-white font-bold text-xs sm:text-sm">
+                      <span className="text-white font-bold text-sm sm:text-base">
                         {data.participant.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   </div>
 
-                  {/* Participant Info */}
-                  <div className="absolute left-2 bottom-1 sm:bottom-2 z-10">
+                  <div className="absolute left-2 bottom-2 z-40 bg-white/90 px-2 py-1 rounded shadow-sm">
                     <p
                       className={`text-xs sm:text-sm font-semibold ${
                         isCurrentUser ? "text-primary" : "text-muted-foreground"
@@ -161,9 +159,8 @@ export function RaceGame({ competition, participant }: RaceGameProps) {
                     <p className="text-xs text-muted-foreground">{data.salesCount} vendas</p>
                   </div>
 
-                  {/* Position Badge */}
-                  <div className="absolute right-2 bottom-1 sm:bottom-2 z-10">
-                    <Badge variant={index === 0 ? "default" : "secondary"} className="text-xs">
+                  <div className="absolute right-2 bottom-2 z-40">
+                    <Badge variant={index === 0 ? "default" : "secondary"} className="text-xs shadow-sm">
                       #{index + 1}
                     </Badge>
                   </div>

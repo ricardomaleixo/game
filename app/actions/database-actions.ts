@@ -913,16 +913,15 @@ export async function declareWinners() {
         orderBy: { points: "desc" },
       })
 
-      // Criar achievements para os 3 primeiros colocados
-      const medals = [
-        { type: "gold" as const, description: "1º Lugar", points: 500 },
-        { type: "silver" as const, description: "2º Lugar", points: 300 },
-        { type: "bronze" as const, description: "3º Lugar", points: 200 },
+      const bonusPoints = [
+        { type: "gold" as const, description: "1º Lugar", bonus: 30 },
+        { type: "silver" as const, description: "2º Lugar", bonus: 20 },
+        { type: "bronze" as const, description: "3º Lugar", bonus: 10 },
       ]
 
       for (let i = 0; i < Math.min(3, participants.length); i++) {
         const participant = participants[i]
-        const medal = medals[i]
+        const medal = bonusPoints[i]
 
         await tx.achievement.create({
           data: {
@@ -930,13 +929,14 @@ export async function declareWinners() {
             competitionId: activeCompetition.id,
             type: medal.type,
             description: `${medal.description} - ${activeCompetition.name}`,
-            points: participant.points, // Salvar pontos finais da gincana
+            points: participant.points + medal.bonus, // Pontos finais + bônus
             date: new Date(),
             adminId,
           },
         })
       }
 
+      // Zerar pontos dos participantes
       await tx.participant.updateMany({
         where: {
           id: { in: participantIds },
@@ -945,6 +945,7 @@ export async function declareWinners() {
         data: { points: 0 },
       })
 
+      // Deletar vendas da gincana
       await tx.sale.deleteMany({
         where: {
           participantId: { in: participantIds },
