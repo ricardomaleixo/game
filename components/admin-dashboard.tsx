@@ -26,7 +26,11 @@ export function AdminDashboard() {
                 <p className="text-xs text-muted-foreground sm:hidden">{user?.name}</p>
               </div>
             </div>
-            <Button variant="outline" onClick={logout} className="flex items-center space-x-1 sm:space-x-2 bg-transparent text-xs sm:text-sm px-2 sm:px-4">
+            <Button
+              variant="outline"
+              onClick={logout}
+              className="flex items-center space-x-1 sm:space-x-2 bg-transparent text-xs sm:text-sm px-2 sm:px-4"
+            >
               <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Sair</span>
             </Button>
@@ -38,26 +42,41 @@ export function AdminDashboard() {
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <Tabs defaultValue="participants" className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 h-auto sm:h-10">
-            <TabsTrigger value="participants" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0">
+            <TabsTrigger
+              value="participants"
+              className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0"
+            >
               <Users className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Participantes</span>
               <span className="sm:hidden">Users</span>
             </TabsTrigger>
-            <TabsTrigger value="rules" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0">
+            <TabsTrigger
+              value="rules"
+              className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0"
+            >
               <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Regras</span>
               <span className="sm:hidden">Rules</span>
             </TabsTrigger>
-            <TabsTrigger value="sales" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 col-span-2 sm:col-span-1">
+            <TabsTrigger
+              value="sales"
+              className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 col-span-2 sm:col-span-1"
+            >
               <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Vendas</span>
+              <span>Pontos</span>
             </TabsTrigger>
-            <TabsTrigger value="competitions" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 col-span-2 sm:col-span-1">
+            <TabsTrigger
+              value="competitions"
+              className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 col-span-2 sm:col-span-1"
+            >
               <Target className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Gincanas</span>
               <span className="sm:hidden">Games</span>
             </TabsTrigger>
-            <TabsTrigger value="ranking" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 col-span-2 sm:col-span-1">
+            <TabsTrigger
+              value="ranking"
+              className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2 sm:py-0 col-span-2 sm:col-span-1"
+            >
               <Trophy className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>Ranking</span>
             </TabsTrigger>

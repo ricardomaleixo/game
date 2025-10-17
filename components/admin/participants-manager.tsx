@@ -3,8 +3,14 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { getParticipants, createParticipant, updateParticipant, deleteParticipant } from "@/app/actions/database-actions"
-import type { Participant } from "@/lib/database"
+import {
+  getParticipants,
+  createParticipant,
+  updateParticipant,
+  deleteParticipant,
+  getCompetitions,
+} from "@/app/actions/database-actions"
+import type { Participant, Competition } from "@/lib/database"
 import { authService } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,6 +30,7 @@ import { ConfirmationModal } from "@/components/ui/confirmation-modal"
 
 export function ParticipantsManager() {
   const [participants, setParticipants] = useState<Participant[]>([])
+  const [competitions, setCompetitions] = useState<Competition[]>([]) // Adicionar estado para competições
   const [isLoading, setIsLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -45,8 +52,12 @@ export function ParticipantsManager() {
   const loadParticipants = async () => {
     try {
       setIsLoading(true)
-      const participantsData = await getParticipants()
+      const [participantsData, competitionsData] = await Promise.all([
+        getParticipants(),
+        getCompetitions(), // Carregar competições também
+      ])
       setParticipants(participantsData)
+      setCompetitions(competitionsData)
     } catch (error) {
       console.error("[v0] Erro ao carregar participantes:", error)
     } finally {
@@ -59,12 +70,12 @@ export function ParticipantsManager() {
 
     try {
       const authState = await authService.getAuthState()
-      
+
       if (!authState.isAuthenticated) {
-        return;
+        return
       }
 
-      await createParticipant(formData)      
+      await createParticipant(formData)
 
       // await authService.register(formData.name, formData.email, "participant")
 
@@ -118,6 +129,11 @@ export function ParticipantsManager() {
     setDeleteConfirmation({ isOpen: false, participant: null })
   }
 
+  const getActiveCompetitionName = (participantId: string) => {
+    const activeCompetition = competitions.find((comp) => comp.isActive && comp.participants.includes(participantId))
+    return activeCompetition ? activeCompetition.name : "-"
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -158,11 +174,15 @@ export function ParticipantsManager() {
                     <span>👤</span>
                     <span>Cadastrar Participante</span>
                   </DialogTitle>
-                  <DialogDescription className="text-sm">Adicione um novo vendedor ao sistema de gincanas</DialogDescription>
+                  <DialogDescription className="text-sm">
+                    Adicione um novo vendedor ao sistema de gincanas
+                  </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-sm">Nome Completo</Label>
+                    <Label htmlFor="name" className="text-sm">
+                      Nome Completo
+                    </Label>
                     <Input
                       id="name"
                       placeholder="Ex: João Silva"
@@ -173,7 +193,9 @@ export function ParticipantsManager() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm">Email</Label>
+                    <Label htmlFor="email" className="text-sm">
+                      Email
+                    </Label>
                     <Input
                       id="email"
                       type="email"
@@ -185,7 +207,9 @@ export function ParticipantsManager() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="position" className="text-sm">Função</Label>
+                    <Label htmlFor="position" className="text-sm">
+                      Função
+                    </Label>
                     <Input
                       id="position"
                       placeholder="Ex: Vendedor, Consultor"
@@ -196,10 +220,17 @@ export function ParticipantsManager() {
                     />
                   </div>
                   <div className="flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="w-full sm:w-auto">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                      className="w-full sm:w-auto"
+                    >
                       Cancelar
                     </Button>
-                    <Button type="submit" className="w-full sm:w-auto">Cadastrar</Button>
+                    <Button type="submit" className="w-full sm:w-auto">
+                      Cadastrar
+                    </Button>
                   </div>
                 </form>
               </DialogContent>
@@ -221,6 +252,7 @@ export function ParticipantsManager() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Função</TableHead>
+                    <TableHead>Gincana</TableHead>
                     <TableHead>Pontos</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Ações</TableHead>
@@ -228,7 +260,10 @@ export function ParticipantsManager() {
                 </TableHeader>
                 <TableBody>
                   {participants.map((participant) => (
-                    <TableRow key={participant.id} className="block sm:table-row border-b sm:border-b-0 p-3 sm:p-0 mb-3 sm:mb-0 bg-card rounded-lg sm:bg-transparent sm:rounded-none">
+                    <TableRow
+                      key={participant.id}
+                      className="block sm:table-row border-b sm:border-b-0 p-3 sm:p-0 mb-3 sm:mb-0 bg-card rounded-lg sm:bg-transparent sm:rounded-none"
+                    >
                       <TableCell className="block sm:table-cell font-medium text-base sm:text-sm">
                         <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Nome:</span>
                         {participant.name}
@@ -240,6 +275,10 @@ export function ParticipantsManager() {
                       <TableCell className="block sm:table-cell">
                         <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Função:</span>
                         {participant.position}
+                      </TableCell>
+                      <TableCell className="block sm:table-cell">
+                        <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Gincana:</span>
+                        <span className="text-sm">{getActiveCompetitionName(participant.id)}</span>
                       </TableCell>
                       <TableCell className="block sm:table-cell">
                         <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Pontos:</span>
@@ -255,18 +294,28 @@ export function ParticipantsManager() {
                       <TableCell className="block sm:table-cell">
                         <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Ações:</span>
                         <div className="flex items-center space-x-2">
-                          <Button variant="outline" size="sm" onClick={() => handleEdit(participant)} className="flex-1 sm:flex-none">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(participant)}
+                            className="flex-1 sm:flex-none"
+                          >
                             <span className="sm:hidden mr-1">Editar</span>
                             ✏️
                           </Button>
-                          <Button variant="outline" size="sm" onClick={() => handleDelete(participant)} className="flex-1 sm:flex-none">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(participant)}
+                            className="flex-1 sm:flex-none"
+                          >
                             <span className="sm:hidden mr-1">Excluir</span>
                             🗑️
                           </Button>
                         </div>
                       </TableCell>
                     </TableRow>
-                ))}
+                  ))}
                 </TableBody>
               </Table>
             </div>
@@ -285,7 +334,9 @@ export function ParticipantsManager() {
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-name" className="text-sm">Nome Completo</Label>
+              <Label htmlFor="edit-name" className="text-sm">
+                Nome Completo
+              </Label>
               <Input
                 id="edit-name"
                 placeholder="Ex: João Silva"
@@ -296,7 +347,9 @@ export function ParticipantsManager() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-email" className="text-sm">Email</Label>
+              <Label htmlFor="edit-email" className="text-sm">
+                Email
+              </Label>
               <Input
                 id="edit-email"
                 type="email"
@@ -308,7 +361,9 @@ export function ParticipantsManager() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-position" className="text-sm">Função</Label>
+              <Label htmlFor="edit-position" className="text-sm">
+                Função
+              </Label>
               <Input
                 id="edit-position"
                 placeholder="Ex: Vendedor, Consultor"
@@ -319,10 +374,17 @@ export function ParticipantsManager() {
               />
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)} className="w-full sm:w-auto">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEditDialogOpen(false)}
+                className="w-full sm:w-auto"
+              >
                 Cancelar
               </Button>
-              <Button type="submit" className="w-full sm:w-auto">Salvar Alterações</Button>
+              <Button type="submit" className="w-full sm:w-auto">
+                Salvar Alterações
+              </Button>
             </div>
           </form>
         </DialogContent>

@@ -36,7 +36,6 @@ export function TowerGame({ competition, participant }: TowerGameProps) {
       const allParticipants = await getMyTeamParticipants()
       console.log("[v0] TowerGame - All team participants:", allParticipants)
 
-      // Isso garante que o participante veja todos os seus concorrentes
       const sorted = allParticipants.sort((a, b) => b.points - a.points)
       setRanking(sorted)
       setAllCompetitionParticipants(sorted)
@@ -54,6 +53,14 @@ export function TowerGame({ competition, participant }: TowerGameProps) {
   }
 
   const maxHeight = ranking[0] ? Math.floor(ranking[0].points / 10) : 1
+
+  const getGridClass = () => {
+    const count = allCompetitionParticipants.length
+    if (count === 2) return "grid-cols-2" // 50% cada
+    if (count === 3) return "grid-cols-3" // 33% cada
+    if (count <= 6) return "grid-cols-2 sm:grid-cols-3" // 2 colunas mobile, 3 desktop
+    return "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4" // Grid maior para mais participantes
+  }
 
   const renderParticipantTower = (p: Participant, isCurrentUser: boolean) => {
     const height = Math.floor(p.points / 10)
@@ -77,7 +84,7 @@ export function TowerGame({ competition, participant }: TowerGameProps) {
     }
 
     return (
-      <div className="flex flex-col items-center space-y-2 min-w-[80px] sm:min-w-[100px]">
+      <div className="flex flex-col items-center space-y-2 p-2">
         <div className="text-center">
           <p className={`text-xs sm:text-sm font-semibold ${isCurrentUser ? "text-primary" : "text-muted-foreground"}`}>
             {p.name.split(" ")[0]}
@@ -127,12 +134,10 @@ export function TowerGame({ competition, participant }: TowerGameProps) {
               <p className="text-xs sm:text-sm">Nenhum participante na competição</p>
             </div>
           ) : (
-            <div className="overflow-x-auto pb-2">
-              <div className="flex space-x-3 sm:space-x-4 min-w-max px-2">
-                {allCompetitionParticipants.map((p) => (
-                  <div key={p.id}>{renderParticipantTower(p, p.id === participant.id)}</div>
-                ))}
-              </div>
+            <div className={`grid ${getGridClass()} gap-3 sm:gap-4`}>
+              {allCompetitionParticipants.map((p) => (
+                <div key={p.id}>{renderParticipantTower(p, p.id === participant.id)}</div>
+              ))}
             </div>
           )}
         </div>

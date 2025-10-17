@@ -56,6 +56,10 @@ export function GameRulesManager() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!formData.productName.trim() || !formData.points.trim()) {
+      return
+    }
+
     try {
       if (editingRule) {
         await updateGameRule(editingRule.id, {
@@ -108,6 +112,10 @@ export function GameRulesManager() {
       }
     }
     setDeleteConfirmation({ isOpen: false, ruleId: null })
+  }
+
+  const isFormValid = () => {
+    return formData.productName.trim() !== "" && formData.points.trim() !== "" && Number.parseInt(formData.points) > 0
   }
 
   if (isLoading) {
@@ -192,7 +200,9 @@ export function GameRulesManager() {
                     <Button type="button" variant="outline" onClick={resetForm}>
                       Cancelar
                     </Button>
-                    <Button type="submit">{editingRule ? "Salvar" : "Criar"} Regra</Button>
+                    <Button type="submit" disabled={!isFormValid()}>
+                      {editingRule ? "Salvar" : "Criar"} Regra
+                    </Button>
                   </div>
                 </form>
               </DialogContent>
@@ -204,7 +214,9 @@ export function GameRulesManager() {
             <div className="text-center py-8">
               <Settings className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground text-sm sm:text-base">Nenhuma regra configurada ainda</p>
-              <p className="text-xs sm:text-sm text-muted-foreground">Crie regras para definir a pontuação dos produtos</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Crie regras para definir a pontuação dos produtos
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -219,9 +231,14 @@ export function GameRulesManager() {
                 </TableHeader>
                 <TableBody>
                   {rules.map((rule) => (
-                    <TableRow key={rule.id} className="block sm:table-row border-b sm:border-b-0 p-3 sm:p-0 mb-3 sm:mb-0 bg-card rounded-lg sm:bg-transparent sm:rounded-none">
+                    <TableRow
+                      key={rule.id}
+                      className="block sm:table-row border-b sm:border-b-0 p-3 sm:p-0 mb-3 sm:mb-0 bg-card rounded-lg sm:bg-transparent sm:rounded-none"
+                    >
                       <TableCell className="block sm:table-cell sm:flex sm:items-center sm:space-x-2">
-                        <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Produto/Serviço:</span>
+                        <span className="sm:hidden font-semibold text-muted-foreground block mb-1">
+                          Produto/Serviço:
+                        </span>
                         <div className="flex items-center space-x-2">
                           <Package className="h-4 w-4 text-muted-foreground" />
                           <span className="font-medium">{rule.productName}</span>

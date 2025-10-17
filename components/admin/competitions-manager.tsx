@@ -50,7 +50,7 @@ export function CompetitionsManager() {
   const [formData, setFormData] = useState({
     name: "",
     type: "" as Competition["type"],
-    startDate: "",
+    startDate: new Date().toISOString().split("T")[0], // Data inicial padrão = HOJE
     endDate: "",
     selectedParticipants: [] as string[],
     isActive: true,
@@ -90,6 +90,18 @@ export function CompetitionsManager() {
         setIsEditDialogOpen(false)
         setEditingCompetition(null)
       } else {
+        if (formData.isActive) {
+          // Desativar todas as gincanas ativas
+          for (const comp of competitions) {
+            if (comp.isActive) {
+              await updateCompetition(comp.id, {
+                ...comp,
+                isActive: false,
+              })
+            }
+          }
+        }
+
         await saveCompetition({
           name: formData.name,
           type: formData.type,
@@ -104,7 +116,7 @@ export function CompetitionsManager() {
       setFormData({
         name: "",
         type: "" as Competition["type"],
-        startDate: "",
+        startDate: new Date().toISOString().split("T")[0], // Resetar para data de hoje
         endDate: "",
         selectedParticipants: [],
         isActive: true,
@@ -164,6 +176,17 @@ export function CompetitionsManager() {
     setIsLoading(true)
     try {
       await resetCompetition()
+
+      // Desativar todas as gincanas
+      for (const comp of competitions) {
+        if (comp.isActive) {
+          await updateCompetition(comp.id, {
+            ...comp,
+            isActive: false,
+          })
+        }
+      }
+
       await loadData()
     } catch (error) {
       console.error("Erro ao resetar competição:", error)
@@ -189,6 +212,16 @@ export function CompetitionsManager() {
 
   const getCompetitionTypeInfo = (type: Competition["type"]) => {
     return competitionTypes.find((t) => t.value === type)
+  }
+
+  const isFormValid = () => {
+    return (
+      formData.name.trim() !== "" &&
+      formData.type !== "" &&
+      formData.startDate !== "" &&
+      formData.endDate !== "" &&
+      formData.selectedParticipants.length > 0
+    )
   }
 
   const renderForm = () => (
@@ -298,7 +331,7 @@ export function CompetitionsManager() {
             setFormData({
               name: "",
               type: "" as Competition["type"],
-              startDate: "",
+              startDate: new Date().toISOString().split("T")[0],
               endDate: "",
               selectedParticipants: [],
               isActive: true,
@@ -308,7 +341,7 @@ export function CompetitionsManager() {
         >
           Cancelar
         </Button>
-        <Button type="submit" disabled={isLoading}>
+        <Button type="submit" disabled={isLoading || !isFormValid()}>
           {isLoading ? "Salvando..." : editingCompetition ? "Atualizar Gincana" : "Criar Gincana"}
         </Button>
       </div>

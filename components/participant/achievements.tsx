@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "@/hooks/use-auth-prisma"
-import { getMyAchievements, getMySales, getMyParticipantData } from "@/app/actions/database-actions"
-import type { Achievement, Sale, Participant } from "@/lib/database"
+import { getMyAchievements, getMySales, getMyParticipantData, getCompetitions } from "@/app/actions/database-actions"
+import type { Achievement, Sale, Participant, Competition } from "@/lib/database"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
@@ -11,6 +11,8 @@ export function Achievements() {
   const { user } = useAuth()
   const [achievements, setAchievements] = useState<Achievement[]>([])
   const [sales, setSales] = useState<Sale[]>([])
+  const [competitions, setCompetitions] = useState<Competition[]>([])
+  const [currentParticipant, setCurrentParticipant] = useState<Participant | null>(null)
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
     totalAchievements: 0,
@@ -30,20 +32,35 @@ export function Achievements() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const [currentParticipant, participantAchievements, participantSales] = await Promise.all([
+      const [participant, participantAchievements, participantSales, allCompetitions] = await Promise.all([
         getMyParticipantData(),
         getMyAchievements(),
         getMySales(),
+        getCompetitions(),
       ])
 
-      if (currentParticipant) {
+      if (participant) {
+        setCurrentParticipant(participant)
         setAchievements(participantAchievements)
         setSales(participantSales)
+        setCompetitions(allCompetitions)
 
-        // Calculate achievement stats
-        const goldMedals = participantAchievements.filter((a: Achievement) => a.type === "gold").length
-        const silverMedals = participantAchievements.filter((a: Achievement) => a.type === "silver").length
-        const bronzeMedals = participantAchievements.filter((a: Achievement) => a.type === "bronze").length
+        let goldMedals = 0
+        let silverMedals = 0
+        let bronzeMedals = 0
+
+        // Verificar competições finalizadas onde o participante ganhou medalhas
+        for (const comp of allCompetitions) {
+          if (!comp.isActive && comp.participants.includes(participant.id)) {
+            // Competição finalizada e participante estava nela
+            // Aqui você pode adicionar lógica para verificar a posição final
+            // Por enquanto, vamos contar as conquistas existentes
+          }
+        }
+
+        goldMedals = participantAchievements.filter((a: Achievement) => a.type === "gold").length
+        silverMedals = participantAchievements.filter((a: Achievement) => a.type === "silver").length
+        bronzeMedals = participantAchievements.filter((a: Achievement) => a.type === "bronze").length
         const treasures = participantAchievements.filter((a: Achievement) => a.type === "treasure").length
         const completedMissions = participantAchievements.filter((a: Achievement) => a.type === "mission").length
 
@@ -97,7 +114,6 @@ export function Achievements() {
     }
   }
 
-  // Generate some sample achievements based on sales data
   const generateSampleAchievements = () => {
     const sampleAchievements = []
 
