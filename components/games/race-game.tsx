@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getParticipants, getSales } from "@/app/actions/database-actions"
+import { getMyTeamParticipants, getSales } from "@/app/actions/database-actions"
 import type { Competition, Participant } from "@/lib/database"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -37,37 +37,15 @@ export function RaceGame({ competition, participant }: RaceGameProps) {
       console.log("[v0] RaceGame - Competition:", competition)
       console.log("[v0] RaceGame - Participant:", participant)
 
-      // Get ranking for this competition
-      const allParticipants = await getParticipants()
-      console.log("[v0] RaceGame - All participants:", allParticipants)
+      const allParticipants = await getMyTeamParticipants()
+      console.log("[v0] RaceGame - All team participants:", allParticipants)
 
-      // Parse participants field correctly (it's stored as JSON)
-      let participantIds: string[] = []
-      if (competition.participants) {
-        if (typeof competition.participants === "string") {
-          try {
-            participantIds = JSON.parse(competition.participants)
-          } catch (e) {
-            console.error("[v0] RaceGame - Error parsing participants:", e)
-            participantIds = []
-          }
-        } else if (Array.isArray(competition.participants)) {
-          participantIds = competition.participants
-        }
-      }
-
-      console.log("[v0] RaceGame - Participant IDs from competition:", participantIds)
-
-      const competitionParticipants = allParticipants.filter((p) => participantIds.includes(p.id))
-      console.log("[v0] RaceGame - Filtered competition participants:", competitionParticipants)
-
-      const sorted = competitionParticipants.sort((a, b) => b.points - a.points)
+      const sorted = allParticipants.sort((a, b) => b.points - a.points)
       setRanking(sorted)
 
       const pos = sorted.findIndex((p) => p.id === participant.id) + 1
       setPosition(pos)
 
-      // Get sales data
       const allSales = await getSales()
       const participantSales = allSales.filter((s) => s.participantId === participant.id)
       setSales(participantSales)
@@ -77,7 +55,7 @@ export function RaceGame({ competition, participant }: RaceGameProps) {
       const progress = Math.min((participantSales.length / maxSales) * 100, 100)
       setRaceProgress(progress)
 
-      const raceDataPromises = competitionParticipants.map(async (p) => {
+      const raceDataPromises = allParticipants.map(async (p) => {
         const pSales = allSales.filter((s) => s.participantId === p.id)
         const pProgress = Math.min((pSales.length / maxSales) * 100, 100)
         return {
@@ -91,6 +69,8 @@ export function RaceGame({ competition, participant }: RaceGameProps) {
       // Ordenar por progresso (maior primeiro)
       raceData.sort((a, b) => b.progress - a.progress)
       setAllRaceData(raceData)
+
+      console.log("[v0] RaceGame - Race data:", raceData)
     } catch (error) {
       console.error("Erro ao carregar dados da corrida:", error)
     } finally {

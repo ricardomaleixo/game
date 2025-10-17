@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getParticipants } from "@/app/actions/database-actions"
+import { getMyTeamParticipants } from "@/app/actions/database-actions"
 import type { Competition, Participant } from "@/lib/database"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -30,40 +30,22 @@ export function TowerGame({ competition, participant }: TowerGameProps) {
       console.log("[v0] TowerGame - Competition:", competition)
       console.log("[v0] TowerGame - Participant:", participant)
 
-      // Calculate tower height based on points (each 10 points = 1 floor)
       const height = Math.floor(participant.points / 10)
       setTowerHeight(height)
 
-      // Get ranking for this competition
-      const allParticipants = await getParticipants()
-      console.log("[v0] TowerGame - All participants:", allParticipants)
+      const allParticipants = await getMyTeamParticipants()
+      console.log("[v0] TowerGame - All team participants:", allParticipants)
 
-      // Parse participants field correctly (it's stored as JSON)
-      let participantIds: string[] = []
-      if (competition.participants) {
-        if (typeof competition.participants === "string") {
-          try {
-            participantIds = JSON.parse(competition.participants)
-          } catch (e) {
-            console.error("[v0] TowerGame - Error parsing participants:", e)
-            participantIds = []
-          }
-        } else if (Array.isArray(competition.participants)) {
-          participantIds = competition.participants
-        }
-      }
-
-      console.log("[v0] TowerGame - Participant IDs from competition:", participantIds)
-
-      const competitionParticipants = allParticipants.filter((p) => participantIds.includes(p.id))
-      console.log("[v0] TowerGame - Filtered competition participants:", competitionParticipants)
-
-      const sorted = competitionParticipants.sort((a, b) => b.points - a.points)
+      // Isso garante que o participante veja todos os seus concorrentes
+      const sorted = allParticipants.sort((a, b) => b.points - a.points)
       setRanking(sorted)
       setAllCompetitionParticipants(sorted)
 
       const pos = sorted.findIndex((p) => p.id === participant.id) + 1
       setPosition(pos)
+
+      console.log("[v0] TowerGame - Ranking:", sorted)
+      console.log("[v0] TowerGame - Position:", pos)
     } catch (error) {
       console.error("Erro ao carregar dados da torre:", error)
     } finally {

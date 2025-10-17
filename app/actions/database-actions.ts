@@ -820,3 +820,35 @@ export async function getMyTeamRanking() {
     return []
   }
 }
+
+export async function getMyTeamParticipants() {
+  try {
+    const participantData = await getCurrentParticipantData()
+    console.log("[getMyTeamParticipants] Dados do participante:", participantData)
+
+    if (!participantData) {
+      console.log("[getMyTeamParticipants] Nenhum dado de participante encontrado")
+      return []
+    }
+
+    const participants = await prisma.participant.findMany({
+      where: { adminId: participantData.adminId },
+      orderBy: { points: "desc" },
+    })
+
+    console.log("[getMyTeamParticipants] Participantes encontrados:", participants.length)
+
+    return participants.map((p: Participant) => ({
+      id: p.id,
+      name: p.name,
+      email: p.email,
+      position: p.position,
+      points: p.points,
+      createdAt: p.createdAt.toISOString(),
+      adminId: p.adminId,
+    }))
+  } catch (error) {
+    console.error("Error fetching my team participants:", error)
+    return []
+  }
+}
