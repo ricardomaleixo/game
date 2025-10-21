@@ -91,8 +91,7 @@ export function LoginForm() {
   const handlePasswordSetComplete = () => {
     setShowPasswordSetup(false)
     setUserForSetup(null)
-    // Recarregar a página para fazer login automático
-    window.location.reload()
+    router.push("/")
   }
 
   const handleBackToEmail = () => {

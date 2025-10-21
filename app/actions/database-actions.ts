@@ -82,24 +82,45 @@ export async function createParticipant(participant: CreateParticipant): Promise
       throw new Error(`Já existe um participante com o email ${participant.email}`)
     }
 
-    const newParticipant = await prisma.participant.create({
-      data: {
-        name: participant.name,
-        email: participant.email,
-        position: participant.position,
-        points: 0,
-        adminId,
-      },
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // Criar o novo participante
+      const newParticipant = await tx.participant.create({
+        data: {
+          name: participant.name,
+          email: participant.email,
+          position: participant.position,
+          points: 0,
+          adminId,
+        },
+      })
+
+      // Buscar todas as gincanas do admin
+      const competitions = await tx.competition.findMany({
+        where: { adminId },
+      })
+
+      // Adicionar o novo participante a todas as gincanas
+      for (const competition of competitions) {
+        const currentParticipants = (competition.participants as string[]) || []
+        await tx.competition.update({
+          where: { id: competition.id },
+          data: {
+            participants: [...currentParticipants, newParticipant.id],
+          },
+        })
+      }
+
+      return newParticipant
     })
 
     return {
-      id: newParticipant.id,
-      name: newParticipant.name,
-      email: newParticipant.email,
-      position: newParticipant.position,
-      points: newParticipant.points,
-      createdAt: newParticipant.createdAt.toISOString(),
-      adminId: newParticipant.adminId,
+      id: result.id,
+      name: result.name,
+      email: result.email,
+      position: result.position,
+      points: result.points,
+      createdAt: result.createdAt.toISOString(),
+      adminId: result.adminId,
     }
   } catch (error) {
     console.error("Error saving participant:", error)
@@ -192,6 +213,11 @@ export async function saveCompetition(competition: {
       throw new Error("Admin não autenticado")
     }
 
+    const allParticipants = await prisma.participant.findMany({
+      where: { adminId },
+    })
+    const participantIds = allParticipants.map((p) => p.id)
+
     const newCompetition = await prisma.competition.create({
       data: {
         name: competition.name,
@@ -200,7 +226,7 @@ export async function saveCompetition(competition: {
         endDate: new Date(competition.endDate),
         isActive: competition.isActive ?? true,
         rules: {},
-        participants: [],
+        participants: participantIds, // Associar todos os participantes automaticamente
         adminId,
       },
     })

@@ -188,13 +188,7 @@ export function CompetitionsManager() {
   }
 
   const isFormValid = () => {
-    return (
-      formData.name.trim() !== "" &&
-      formData.type !== "" &&
-      formData.startDate !== "" &&
-      formData.endDate !== "" &&
-      formData.selectedParticipants.length > 0
-    )
+    return formData.name.trim() !== "" && formData.type !== "" && formData.startDate !== "" && formData.endDate !== ""
   }
 
   const renderForm = () => (
@@ -275,21 +269,16 @@ export function CompetitionsManager() {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label>Participantes</Label>
-        <div className="max-h-40 overflow-y-auto space-y-2 border rounded-lg p-3">
-          {participants.map((participant) => (
-            <div key={participant.id} className="flex items-center space-x-2">
-              <Checkbox
-                id={participant.id}
-                checked={formData.selectedParticipants.includes(participant.id)}
-                onCheckedChange={(checked) => handleParticipantToggle(participant.id, checked as boolean)}
-              />
-              <Label htmlFor={participant.id} className="flex-1 cursor-pointer">
-                {participant.name} - {participant.position}
-              </Label>
-            </div>
-          ))}
+      <div className="p-4 bg-muted rounded-lg border border-border">
+        <div className="flex items-start space-x-2">
+          <span className="text-primary mt-0.5">ℹ️</span>
+          <div className="text-sm">
+            <p className="font-medium text-foreground">Participantes Automáticos</p>
+            <p className="text-muted-foreground mt-1">
+              Todos os participantes cadastrados serão automaticamente incluídos nesta gincana. Novos participantes
+              também serão adicionados automaticamente a todas as gincanas existentes.
+            </p>
+          </div>
         </div>
       </div>
 
