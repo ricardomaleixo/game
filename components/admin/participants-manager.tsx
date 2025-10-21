@@ -27,10 +27,11 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { ConfirmationModal } from "@/components/ui/confirmation-modal"
+import { useToast } from "@/hooks/use-toast"
 
 export function ParticipantsManager() {
   const [participants, setParticipants] = useState<Participant[]>([])
-  const [competitions, setCompetitions] = useState<Competition[]>([]) // Adicionar estado para competições
+  const [competitions, setCompetitions] = useState<Competition[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -45,6 +46,8 @@ export function ParticipantsManager() {
     position: "",
   })
 
+  const { toast } = useToast()
+
   useEffect(() => {
     loadParticipants()
   }, [])
@@ -52,14 +55,16 @@ export function ParticipantsManager() {
   const loadParticipants = async () => {
     try {
       setIsLoading(true)
-      const [participantsData, competitionsData] = await Promise.all([
-        getParticipants(),
-        getCompetitions(), // Carregar competições também
-      ])
+      const [participantsData, competitionsData] = await Promise.all([getParticipants(), getCompetitions()])
       setParticipants(participantsData)
       setCompetitions(competitionsData)
     } catch (error) {
       console.error("[v0] Erro ao carregar participantes:", error)
+      toast({
+        title: "Erro ao carregar",
+        description: "Não foi possível carregar os participantes. Tente novamente.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
@@ -72,19 +77,33 @@ export function ParticipantsManager() {
       const authState = await authService.getAuthState()
 
       if (!authState.isAuthenticated) {
+        toast({
+          title: "Não autenticado",
+          description: "Você precisa estar autenticado para criar participantes.",
+          variant: "destructive",
+        })
         return
       }
 
       await createParticipant(formData)
 
-      // await authService.register(formData.name, formData.email, "participant")
-
       setFormData({ name: "", email: "", position: "" })
       setIsDialogOpen(false)
 
+      toast({
+        title: "Participante criado!",
+        description: `${formData.name} foi adicionado com sucesso.`,
+      })
+
       await loadParticipants()
-    } catch (error) {
+    } catch (error: any) {
       console.error("[v0] ERRO no cadastro:", error)
+      const errorMessage = error?.message || "Erro ao criar participante"
+      toast({
+        title: "Erro ao criar participante",
+        description: errorMessage.includes("email") ? "Este email já está cadastrado." : errorMessage,
+        variant: "destructive",
+      })
     }
   }
 
@@ -106,9 +125,18 @@ export function ParticipantsManager() {
         setFormData({ name: "", email: "", position: "" })
         setIsEditDialogOpen(false)
         setEditingParticipant(null)
+        toast({
+          title: "Participante atualizado!",
+          description: "As informações foram salvas com sucesso.",
+        })
         await loadParticipants()
-      } catch (error) {
+      } catch (error: any) {
         console.error("[v0] Erro ao atualizar participante:", error)
+        toast({
+          title: "Erro ao atualizar",
+          description: error?.message || "Não foi possível atualizar o participante.",
+          variant: "destructive",
+        })
       }
     }
   }
@@ -121,9 +149,18 @@ export function ParticipantsManager() {
     if (deleteConfirmation.participant) {
       try {
         await deleteParticipant(deleteConfirmation.participant.id)
+        toast({
+          title: "Participante excluído",
+          description: `${deleteConfirmation.participant.name} foi removido do sistema.`,
+        })
         await loadParticipants()
       } catch (error) {
         console.error("[v0] Erro ao deletar participante:", error)
+        toast({
+          title: "Erro ao excluir",
+          description: "Não foi possível excluir o participante.",
+          variant: "destructive",
+        })
       }
     }
     setDeleteConfirmation({ isOpen: false, participant: null })

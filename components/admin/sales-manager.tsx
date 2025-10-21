@@ -27,6 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { ConfirmationModal } from "@/components/ui/confirmation-modal"
+import { useToast } from "@/hooks/use-toast"
 
 export function SalesManager() {
   const [sales, setSales] = useState<Sale[]>([])
@@ -45,6 +46,7 @@ export function SalesManager() {
     productName: "",
     type: "sale" as "sale" | "rental",
   })
+  const { toast } = useToast()
 
   useEffect(() => {
     loadData()
@@ -63,6 +65,11 @@ export function SalesManager() {
       setRules(rulesData)
     } catch (error) {
       console.error("[v0] Erro ao carregar dados:", error)
+      toast({
+        title: "Erro ao carregar dados",
+        description: "Não foi possível carregar as vendas e participantes.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
@@ -95,11 +102,21 @@ export function SalesManager() {
         type: formData.type,
       })
 
+      toast({
+        title: "Venda registrada!",
+        description: `${formData.productName} - ${points} pontos adicionados.`,
+      })
+
       setFormData({ participantId: "", productName: "", type: "sale" })
       setIsDialogOpen(false)
       await loadData()
     } catch (error) {
       console.error("[v0] Erro ao salvar venda:", error)
+      toast({
+        title: "Erro ao registrar venda",
+        description: "Não foi possível registrar a venda.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -127,12 +144,22 @@ export function SalesManager() {
         type: formData.type,
       })
 
+      toast({
+        title: "Venda atualizada!",
+        description: "As informações da venda foram atualizadas.",
+      })
+
       setEditingSale(null)
       setFormData({ participantId: "", productName: "", type: "sale" })
       setIsEditDialogOpen(false)
       await loadData()
     } catch (error) {
       console.error("[v0] Erro ao atualizar venda:", error)
+      toast({
+        title: "Erro ao atualizar venda",
+        description: "Não foi possível atualizar a venda.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -144,9 +171,20 @@ export function SalesManager() {
     if (deleteConfirmation.sale) {
       try {
         await deleteSale(deleteConfirmation.sale.id)
+
+        toast({
+          title: "Venda excluída",
+          description: "A venda foi removida do sistema.",
+        })
+
         await loadData()
       } catch (error) {
         console.error("[v0] Erro ao deletar venda:", error)
+        toast({
+          title: "Erro ao excluir venda",
+          description: "Não foi possível excluir a venda.",
+          variant: "destructive",
+        })
       }
     }
     setDeleteConfirmation({ isOpen: false, sale: null })
@@ -197,11 +235,15 @@ export function SalesManager() {
                     <span>📈</span>
                     <span>Registrar Venda/Locação</span>
                   </DialogTitle>
-                  <DialogDescription className="text-sm">Adicione uma nova venda ou locação ao sistema</DialogDescription>
+                  <DialogDescription className="text-sm">
+                    Adicione uma nova venda ou locação ao sistema
+                  </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="participant" className="text-sm">Vendedor</Label>
+                    <Label htmlFor="participant" className="text-sm">
+                      Vendedor
+                    </Label>
                     <Select
                       value={formData.participantId}
                       onValueChange={(value) => setFormData({ ...formData, participantId: value })}
@@ -219,7 +261,9 @@ export function SalesManager() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="productName" className="text-sm">Produto/Serviço</Label>
+                    <Label htmlFor="productName" className="text-sm">
+                      Produto/Serviço
+                    </Label>
                     <Select
                       value={formData.productName}
                       onValueChange={(value) => setFormData({ ...formData, productName: value })}
@@ -247,7 +291,9 @@ export function SalesManager() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="type" className="text-sm">Tipo</Label>
+                    <Label htmlFor="type" className="text-sm">
+                      Tipo
+                    </Label>
                     <Select
                       value={formData.type}
                       onValueChange={(value: "sale" | "rental") => setFormData({ ...formData, type: value })}
@@ -272,10 +318,17 @@ export function SalesManager() {
                     </div>
                   )}
                   <div className="flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="w-full sm:w-auto">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                      className="w-full sm:w-auto"
+                    >
                       Cancelar
                     </Button>
-                    <Button type="submit" className="w-full sm:w-auto">Registrar</Button>
+                    <Button type="submit" className="w-full sm:w-auto">
+                      Registrar
+                    </Button>
                   </div>
                 </form>
               </DialogContent>
@@ -304,7 +357,10 @@ export function SalesManager() {
                 </TableHeader>
                 <TableBody>
                   {sales.map((sale) => (
-                    <TableRow key={sale.id} className="block sm:table-row border-b sm:border-b-0 p-3 sm:p-0 mb-3 sm:mb-0 bg-card rounded-lg sm:bg-transparent sm:rounded-none">
+                    <TableRow
+                      key={sale.id}
+                      className="block sm:table-row border-b sm:border-b-0 p-3 sm:p-0 mb-3 sm:mb-0 bg-card rounded-lg sm:bg-transparent sm:rounded-none"
+                    >
                       <TableCell className="block sm:table-cell">
                         <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Vendedor:</span>
                         <span className="font-medium">{getParticipantName(sale.participantId)}</span>
@@ -330,7 +386,12 @@ export function SalesManager() {
                       <TableCell className="block sm:table-cell">
                         <span className="sm:hidden font-semibold text-muted-foreground block mb-1">Ações:</span>
                         <div className="flex items-center space-x-2">
-                          <Button variant="outline" size="sm" onClick={() => handleEdit(sale)} className="h-8 w-8 p-0 sm:h-8 sm:w-8 flex-1 sm:flex-none">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(sale)}
+                            className="h-8 w-8 p-0 sm:h-8 sm:w-8 flex-1 sm:flex-none"
+                          >
                             <span className="sm:hidden mr-1">Editar</span>
                             ✏️
                           </Button>
@@ -365,7 +426,9 @@ export function SalesManager() {
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="participant" className="text-sm">Vendedor</Label>
+              <Label htmlFor="participant" className="text-sm">
+                Vendedor
+              </Label>
               <Select
                 value={formData.participantId}
                 onValueChange={(value) => setFormData({ ...formData, participantId: value })}
@@ -383,7 +446,9 @@ export function SalesManager() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="productName" className="text-sm">Produto/Serviço</Label>
+              <Label htmlFor="productName" className="text-sm">
+                Produto/Serviço
+              </Label>
               <Select
                 value={formData.productName}
                 onValueChange={(value) => setFormData({ ...formData, productName: value })}
@@ -406,7 +471,9 @@ export function SalesManager() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="type" className="text-sm">Tipo</Label>
+              <Label htmlFor="type" className="text-sm">
+                Tipo
+              </Label>
               <Select
                 value={formData.type}
                 onValueChange={(value: "sale" | "rental") => setFormData({ ...formData, type: value })}
@@ -431,10 +498,17 @@ export function SalesManager() {
               </div>
             )}
             <div className="flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)} className="w-full sm:w-auto">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEditDialogOpen(false)}
+                className="w-full sm:w-auto"
+              >
                 Cancelar
               </Button>
-              <Button type="submit" className="w-full sm:w-auto">Salvar Alterações</Button>
+              <Button type="submit" className="w-full sm:w-auto">
+                Salvar Alterações
+              </Button>
             </div>
           </form>
         </DialogContent>

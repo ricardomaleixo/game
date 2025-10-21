@@ -21,6 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Plus, Settings, Package, Star, Edit, Trash2 } from "lucide-react"
 import { ConfirmationModal } from "@/components/ui/confirmation-modal"
+import { useToast } from "@/hooks/use-toast"
 
 export function GameRulesManager() {
   const [rules, setRules] = useState<GameRule[]>([])
@@ -36,6 +37,7 @@ export function GameRulesManager() {
     points: "",
     isActive: true,
   })
+  const { toast } = useToast()
 
   useEffect(() => {
     loadRules()
@@ -48,6 +50,11 @@ export function GameRulesManager() {
       setRules(rulesData)
     } catch (error) {
       console.error("[v0] Erro ao carregar regras:", error)
+      toast({
+        title: "Erro ao carregar regras",
+        description: "Não foi possível carregar as regras de pontuação.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
@@ -57,6 +64,11 @@ export function GameRulesManager() {
     e.preventDefault()
 
     if (!formData.productName.trim() || !formData.points.trim()) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha o produto/serviço e os pontos.",
+        variant: "destructive",
+      })
       return
     }
 
@@ -67,11 +79,19 @@ export function GameRulesManager() {
           points: Number.parseInt(formData.points),
           isActive: formData.isActive,
         })
+        toast({
+          title: "Regra atualizada!",
+          description: `A regra de "${formData.productName}" foi atualizada.`,
+        })
       } else {
         await saveGameRule({
           productName: formData.productName,
           points: Number.parseInt(formData.points),
           isActive: formData.isActive,
+        })
+        toast({
+          title: "Regra criada!",
+          description: `A regra de "${formData.productName}" foi criada com ${formData.points} pontos.`,
         })
       }
 
@@ -79,6 +99,11 @@ export function GameRulesManager() {
       await loadRules()
     } catch (error) {
       console.error("[v0] Erro ao salvar regra:", error)
+      toast({
+        title: "Erro ao salvar regra",
+        description: "Não foi possível salvar a regra de pontuação.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -106,9 +131,18 @@ export function GameRulesManager() {
     if (deleteConfirmation.ruleId) {
       try {
         await deleteGameRule(deleteConfirmation.ruleId)
+        toast({
+          title: "Regra excluída",
+          description: "A regra de pontuação foi removida.",
+        })
         await loadRules()
       } catch (error) {
         console.error("[v0] Erro ao deletar regra:", error)
+        toast({
+          title: "Erro ao excluir regra",
+          description: "Não foi possível excluir a regra de pontuação.",
+          variant: "destructive",
+        })
       }
     }
     setDeleteConfirmation({ isOpen: false, ruleId: null })

@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label"
 import { PasswordSetup } from "./password-setup"
 import { useCsrfToken } from "@/hooks/use-csrf"
+import { useToast } from "@/hooks/use-toast"
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
@@ -24,6 +25,7 @@ export function LoginForm() {
   const { login } = useAuth()
   const router = useRouter()
   const { token: csrfToken, isLoading: csrfLoading } = useCsrfToken()
+  const { toast } = useToast()
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,13 +43,17 @@ export function LoginForm() {
 
       if (!result.success) {
         setError(result.error || "Email não encontrado. Verifique com o administrador.")
+        toast({
+          title: "Email não encontrado",
+          description: "Verifique se o email está correto ou entre em contato com o administrador.",
+          variant: "destructive",
+        })
         setLoading(false)
         return
       }
 
       const user = result.user!
 
-      // Verificar se precisa definir senha
       if (result.needsPasswordSetup) {
         setUserForSetup(user)
         setShowPasswordSetup(true)
@@ -55,13 +61,17 @@ export function LoginForm() {
         return
       }
 
-      // Se já tem senha, mostrar campo de senha
       setEmailVerified(true)
       setShowPasswordField(true)
       setLoading(false)
     } catch (error) {
       console.error("Erro ao verificar email:", error)
       setError("Erro interno. Tente novamente.")
+      toast({
+        title: "Erro ao verificar email",
+        description: "Ocorreu um erro interno. Tente novamente.",
+        variant: "destructive",
+      })
       setLoading(false)
     }
   }
@@ -74,15 +84,28 @@ export function LoginForm() {
     try {
       const result = await login(email, password)
       if (result.success) {
-        // Redirecionamento bem-sucedido para a página principal
+        toast({
+          title: "Login realizado!",
+          description: "Bem-vindo de volta!",
+        })
         router.push("/")
         return
       } else {
         setError(result.error || "Senha incorreta")
+        toast({
+          title: "Senha incorreta",
+          description: "Verifique sua senha e tente novamente.",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Erro no login:", error)
       setError("Erro interno. Tente novamente.")
+      toast({
+        title: "Erro no login",
+        description: "Ocorreu um erro interno. Tente novamente.",
+        variant: "destructive",
+      })
     }
 
     setLoading(false)
