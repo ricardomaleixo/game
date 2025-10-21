@@ -2,9 +2,13 @@
 
 import { useState, useEffect, createContext, useContext, type ReactNode } from "react"
 import { getCurrentUser, loginUser, logoutUser, type AuthUser, type AuthState } from "@/app/actions/auth-actions"
+import { LoadingTrophy } from "@/components/loading-trophy"
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; needsPasswordSetup?: boolean; participantId?: string }>
+  login: (
+    email: string,
+    password: string,
+  ) => Promise<{ success: boolean; error?: string; needsPasswordSetup?: boolean; participantId?: string }>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
 }
@@ -31,18 +35,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshUser()
   }, [])
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string; needsPasswordSetup?: boolean; participantId?: string }> => {
+  const login = async (
+    email: string,
+    password: string,
+  ): Promise<{ success: boolean; error?: string; needsPasswordSetup?: boolean; participantId?: string }> => {
     try {
       const result = await loginUser(email, password)
       if (result.success && result.user) {
         setAuthState({ user: result.user, isAuthenticated: true })
         return { success: true }
       } else if (result.needsPasswordSetup) {
-        return { 
-          success: false, 
-          needsPasswordSetup: true, 
+        return {
+          success: false,
+          needsPasswordSetup: true,
           participantId: result.participantId,
-          error: result.message 
+          error: result.message,
         }
       } else {
         return { success: false, error: result.message || "Erro no login" }
@@ -63,14 +70,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   if (isLoading) {
-    return <div>Carregando...</div>
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingTrophy size="lg" />
+      </div>
+    )
   }
 
-  return (
-    <AuthContext.Provider value={{ ...authState, login, logout, refreshUser }}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={{ ...authState, login, logout, refreshUser }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

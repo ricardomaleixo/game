@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation"
 import { RegistrationForm } from "@/components/registration-form"
 import { Suspense } from "react"
+import { LoadingTrophy } from "@/components/loading-trophy"
 
 function RegisterContent() {
   const searchParams = useSearchParams()
@@ -28,7 +29,13 @@ function RegisterContent() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div>Carregando...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <LoadingTrophy size="lg" />
+        </div>
+      }
+    >
       <RegisterContent />
     </Suspense>
   )

@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { PasswordSetup } from "./password-setup"
 import { useCsrfToken } from "@/hooks/use-csrf"
 import { useToast } from "@/hooks/use-toast"
+import { LoadingTrophy } from "@/components/loading-trophy"
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
@@ -131,10 +132,7 @@ export function LoginForm() {
   if (csrfLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Carregando...</p>
-        </div>
+        <LoadingTrophy size="lg" />
       </div>
     )
   }
