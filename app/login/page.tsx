@@ -3,7 +3,6 @@
 import { LoginForm } from "@/components/login-form"
 import { useSearchParams } from "next/navigation"
 import { Suspense } from "react"
-import { LoadingTrophy } from "@/components/loading-trophy"
 
 function LoginContent() {
   const searchParams = useSearchParams()
@@ -24,13 +23,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <LoadingTrophy size="lg" />
-        </div>
-      }
-    >
+    <Suspense fallback={<div>Carregando...</div>}>
       <LoginContent />
     </Suspense>
   )
